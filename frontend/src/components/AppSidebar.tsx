@@ -1,10 +1,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "antd";
-import { AntDesignOutlined, SearchOutlined, FormOutlined } from '@ant-design/icons';
+import { AntDesignOutlined, SearchOutlined, FormOutlined, LoginOutlined } from '@ant-design/icons';
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
-// import { UserButton, SignInButton, SignedIn, SignedOut } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
 
 function AppSidebar({ onControlPanelToggle }: { onControlPanelToggle: () => void }) {
   const [isOpen, setIsOpen] = useState(true);
@@ -40,14 +39,14 @@ function AppSidebar({ onControlPanelToggle }: { onControlPanelToggle: () => void
       {/* 顶部开关 */}
       {isOpen && 
         <div className="flex flex-row justify-between align-middle">
-          <Button onClick={toggleSidebar} type="text" size="large" icon={<AntDesignOutlined />}>
+          <Button onClick={toggleSidebar} type="text" size="large" icon={<AntDesignOutlined />} >
             <div className="text-indigo-500 font-bold">
               来龙去脉
             </div>
           </Button>
           <div className="mt-2 space-x-2">
-            <SearchOutlined />
-            <FormOutlined onClick={onControlPanelToggle}/>
+            <SearchOutlined className="cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50" />
+            <FormOutlined className="cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50" onClick={onControlPanelToggle}/>
           </div>
         </div>
       }
@@ -60,33 +59,39 @@ function AppSidebar({ onControlPanelToggle }: { onControlPanelToggle: () => void
 
       {/* 历史滚动列表 */}
       <ScrollArea className="flex-1 w-full"> 
-        {isOpen && mockHistory.map((section) => (
-          <div key={section.date} className="mb-6">
-            {<p className="font-bold text-indigo-400 text-sm">{section.date}</p>}
-            <ul className="ml-2">
-              {section.keywords
-                .map((keyword, idx) => (
-                <li key={idx} 
-                className="text-sm text-gray-700 cursor-pointer px-2 py-2 rounded-2xl 
-                  hover:bg-gray-50
-                  active:bg-gray-50 active:text-indigo-400">
-                  {keyword}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        <SignedIn>
+          {isOpen && mockHistory.map((section) => (
+            <div key={section.date} className="mb-6">
+              {<p className="font-bold text-indigo-400 text-sm">{section.date}</p>}
+              <ul className="ml-2">
+                {section.keywords
+                  .map((keyword, idx) => (
+                  <li key={idx} 
+                  className="text-sm text-gray-700 cursor-pointer px-2 py-2 rounded-2xl 
+                    hover:bg-gray-50
+                    active:bg-gray-50 active:text-indigo-400">
+                    {keyword}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </SignedIn>
+        
       </ScrollArea>
 
       {/* 底部 登录/登出 */}
-      <div className="flex flex-row justify-between mt-5">
-        <Avatar className="mb-2">
-          <AvatarImage src="https://github.com/shadcn.png" />
-          <AvatarFallback>CN</AvatarFallback>
-        </Avatar>
-        {isOpen &&
-          <Button>Log in</Button>
-        }
+      <div className="flex align-middle mt-5">
+        <SignedIn>
+          <UserButton />
+        </SignedIn>
+        <SignedOut>
+          <SignInButton>
+            {isOpen ? 
+            <Button style={{ backgroundColor: "#8A6DF1", color: '#fff' }} type="primary" block>登录</Button> 
+            : <Button style={{ backgroundColor: "#8A6DF1", color: '#fff' }} type="primary" icon={<LoginOutlined />}></Button>}
+          </SignInButton>
+        </SignedOut>
       </div>
       
     </div>
