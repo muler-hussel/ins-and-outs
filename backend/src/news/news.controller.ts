@@ -11,7 +11,8 @@ export class NewsController {
   @Post('/')
   async generate(@Body() dto: GenerateNewsDto) {
     const content = await this.newsService.generateNews(dto);
-    return await this.newsService.saveNews(dto, content, this.userId);
+    //如果登录才保存 todo
+    await this.newsService.saveNews(dto, content, this.userId);
   }
 
   //检查新内容是否可生成，用于自动更新判定

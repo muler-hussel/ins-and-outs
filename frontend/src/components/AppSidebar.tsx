@@ -1,18 +1,29 @@
 import { useState, useEffect } from "react";
 import { Button } from "antd";
-import { AntDesignOutlined, SearchOutlined, FormOutlined, LoginOutlined } from '@ant-design/icons';
+import { AntDesignOutlined, SearchOutlined, FormOutlined, LoginOutlined, SettingOutlined } from '@ant-design/icons';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
+import { useModal } from "@/hooks/use-modal";
 
 function AppSidebar({ onControlPanelToggle }: { onControlPanelToggle: () => void }) {
   const [isOpen, setIsOpen] = useState(true);
 
   // TODO: 这里应该从本地存储或后端加载历史记录
   const mockHistory = [
-    { date: "今天", keywords: ["中美关系", "以色列局势"] },
-    { date: "此前", keywords: ["俄乌战争", "AI最新发展"] },
+    { date: "今天", news: [{title:"中美关系"}, {title: "以色列局势"}] },
+    { date: "此前", news: [{title: "俄乌战争"}, {title: "AI最新发展"}] },
   ];
+
+  const onSetClick = (keyword: string) => {
+    useModal.getState().openModal({
+      mode: 'edit',
+      initialData: { title: keyword, autoUpdate: false },
+      onConfirm: async () => {
+        // 调用后端接口
+      },
+    });
+  };
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
@@ -64,14 +75,16 @@ function AppSidebar({ onControlPanelToggle }: { onControlPanelToggle: () => void
             <div key={section.date} className="mb-6">
               {<p className="font-bold text-indigo-400 text-sm">{section.date}</p>}
               <ul className="ml-2">
-                {section.keywords
+                {section.news
                   .map((keyword, idx) => (
-                  <li key={idx} 
-                  className="text-sm text-gray-700 cursor-pointer px-2 py-2 rounded-2xl 
-                    hover:bg-gray-50
-                    active:bg-gray-50 active:text-indigo-400">
-                    {keyword}
-                  </li>
+                  <div className="flex justify-between cursor-pointer px-2 py-2 rounded-2xl 
+                    hover:bg-gray-50 active:bg-gray-50 active:text-indigo-400">
+                    <li key={idx} 
+                      className="text-sm text-gray-700 ">
+                      {keyword.title}
+                    </li>
+                    <SettingOutlined onClick={() => onSetClick(keyword.title)}/>
+                  </div>
                 ))}
               </ul>
             </div>

@@ -4,8 +4,12 @@ import ResultDisplay from './components/ResultDisplay'
 import ControlPanel from './components/ControlPanel';
 import { useState } from 'react';
 import { ControlPanelProvider } from './provider/ControlPanelProvider';
+import { StarNewsModal } from './components/modal/StarNewsModal';
+import { useModal } from './hooks/use-modal';
+
 export default function App() {
   const [showControlPanel, setShowControlPanel] = useState(false);
+  const modal = useModal();
 
   const toggleControlPanel = () => {
     setShowControlPanel(true);
@@ -26,6 +30,20 @@ export default function App() {
           <ResultDisplay onControlPanelToggle={toggleControlPanel} />
         </div>
       </main>
+      <StarNewsModal
+        open={modal.isOpen}
+        onClose={modal.closeModal}
+        onConfirm={(data) => {
+          modal.onConfirm?.(data);
+          modal.closeModal();
+        }}
+        onDelete={() => {
+          modal.onDelete?.();
+          modal.closeModal();
+        }}
+        initialData={modal.initialData}
+        mode={modal.mode}
+      />
     </ControlPanelProvider>
     
   )

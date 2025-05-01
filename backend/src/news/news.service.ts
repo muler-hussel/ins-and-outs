@@ -54,6 +54,48 @@ export class NewsService {
     });
   }
 
+  async unstarNews(newsId: string, userId: string) {
+    const entry = await this.newsEntryModel.findOne({
+      _id: newsId,
+      userId,
+    });
+
+    if (!entry) {
+      throw new NotFoundException('找不到对应的新闻条目');
+    }
+    entry.starred = false;
+
+    if (!entry.groupTitle) return;
+    await this.deleteGroup(entry.groupTitle, userId);
+  }
+
+  async deleteGroup(title: string, userId: string) {
+    const group = await this.newsGroupModel.findOne({
+      title: title,
+      userId: userId,
+    });
+    if (!group) {
+      throw new NotFoundException('找不到对应的新闻历史');
+    }
+
+    for (const contentId of group.contents) {
+      const entry = await this.newsEntryModel.findOne({ _id: contentId });
+      if (!entry) {
+        continue;
+      }
+      entry.groupTitle = undefined;
+    }
+    group.deleteOne();
+  }
+
+  async findAllByUser(userId: string) {
+    return this.newsEntryModel.find({ userId: userId });
+  }
+
+  async findStarredByUser(userId: string) {
+    return this.newsGroupModel.find({ userId: userId });
+  }
+
   private buildPrompt(dto: GenerateNewsDto): string {
     const {
       keyword,

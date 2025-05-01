@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, ObjectId } from 'mongoose';
-import { NewsType } from '../newsType.enum';
+import { NewsStyle } from '../newsStyle.enum';
 
 //收藏的，有同一title的新闻数组
 export type NewsGroupDocument = NewsGroup & Document;
@@ -20,7 +20,7 @@ export class NewsGroup extends Document {
 
   @Prop({ required: true }) detailLevel: number; // e.g. 1–10
   @Prop() focus?: string;
-  @Prop({ required: true }) style: NewsType;
+  @Prop({ required: true }) style: NewsStyle;
 
   // 用户信息，只有登录了才能收藏
   @Prop() userId: string;

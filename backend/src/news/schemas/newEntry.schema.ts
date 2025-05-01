@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { NewsType } from '../newsType.enum';
+import { NewsStyle } from '../newsStyle.enum';
 
 //单条新闻
 export type NewsEntryDocument = NewsEntry & Document;
@@ -24,7 +24,7 @@ export class NewsEntry extends Document {
 
   @Prop({ required: true }) detailLevel: number; // e.g. 1–10
   @Prop() focus?: string;
-  @Prop({ required: true }) style: NewsType;
+  @Prop({ required: true }) style: NewsStyle;
 
   @Prop({ required: true }) content: string;
 
