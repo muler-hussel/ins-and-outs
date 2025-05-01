@@ -1,4 +1,5 @@
 import { createContext, useContext, useState } from "react";
+import { Dayjs } from 'dayjs';
 
 interface ControlPanelContextType {
   show: boolean;
@@ -9,7 +10,10 @@ interface ControlPanelContextType {
 
 interface ControlPanelValues {
   keyword: string;
-  timeRange: string;
+  relativeAmount: number;
+  relativeUnit: string;
+  absoluteStart: Dayjs | null;
+  absoluteEnd: Dayjs | null;
   detailLevel: number;
   focus?: string;
   style: string;

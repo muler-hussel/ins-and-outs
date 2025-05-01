@@ -6,23 +6,33 @@ import {
   CardFooter,
 } from "@/components/ui/card"
 import { Label } from "./ui/label"
-import { Select, Input } from "antd";
+import { Select, Input, Radio, DatePicker } from "antd";
 import { ArrowLeftOutlined, RedoOutlined, CheckOutlined } from "@ant-design/icons"
 import { useControlPanel } from "@/provider/ControlPanelProvider";
 import { useState, useEffect } from "react";
+import { Dayjs } from 'dayjs';
 
 export default function ControlPanel({ onControlPanelToggle }: { onControlPanelToggle: () => void }) {
   const { defaultValues, closePanel } = useControlPanel();
   const [keyword, setKeyword] = useState("");
-  const [timeRange, setTimeRange] = useState("");
+  const [relativeAmount, setRelativeAmount] = useState(0);
+  const [relativeUnit, setRelativeUnit] = useState("");
+  const [absoluteStart, setAbsoluteStart] = useState<Dayjs | null>(null);
+  const [absoluteEnd, setAbsoluteEnd] = useState<Dayjs | null>(null);
   const [detailLevel, setDetailLevel] = useState(500);
   const [focus, setFocus] = useState("");
   const [style, setStyle] = useState("");
+  const [timeMode, setTimeMode] = useState<'relative' | 'absolute'>('relative');
+  const [startPicker, setStartPicker] = useState<PickerType>('date');
+  const [endPicker, setEndPicker] = useState<PickerType>('date');
 
   useEffect(() => {
     if (defaultValues) {
       setKeyword(defaultValues.keyword);
-      setTimeRange(defaultValues.timeRange);
+      setRelativeAmount(defaultValues.relativeAmount);
+      setRelativeUnit(defaultValues.relativeUnit);
+      setAbsoluteStart(defaultValues.absoluteStart);
+      setAbsoluteEnd(defaultValues.absoluteEnd);
       setDetailLevel(defaultValues.detailLevel);
       setFocus(defaultValues.focus || "");
       setStyle(defaultValues.style);
@@ -33,22 +43,36 @@ export default function ControlPanel({ onControlPanelToggle }: { onControlPanelT
 
   const resetForm = () => {
     setKeyword("");
-    setTimeRange("");
+    setRelativeAmount(0);
+    setRelativeUnit("");
+    setAbsoluteStart(null);
+    setAbsoluteEnd(null);
     setDetailLevel(500);
     setFocus("");
     setStyle("");
   };
 
   const handleGenerate = () => {
-    if (!keyword || !timeRange || !style || !detailLevel) {
-      alert("关键词、时间范围、字数要求和风格选择不能为空！");
+    if (!keyword || !style || !detailLevel) {
+      alert("关键词、字数要求和风格选择不能为空！");
+      return;
+    }
+
+    if (timeMode === "relative" && !relativeUnit) {
+      alert("时间范围不能为空！");
+      return;
+    } else if (timeMode === 'absolute' && (absoluteStart === null || absoluteEnd === null)) {
+      alert("时间范围不能为空！");
       return;
     }
 
     // 调用生成 API TODO
-    console.log({ keyword, timeRange, detailLevel, focus, style });
+    console.log({ keyword, detailLevel, focus, style, timeMode, relativeAmount, relativeUnit, absoluteEnd, absoluteStart });
     closePanel();
   };
+
+  const { Option } = Select;
+  type PickerType = 'date';
 
   return (
     <Card className="m-2 w-[300px] bg-gray-50 text-gray-700">
@@ -57,7 +81,7 @@ export default function ControlPanel({ onControlPanelToggle }: { onControlPanelT
       </CardHeader>
       <CardContent>
         <form>
-          <div className="grid w-full items-center gap-4">
+          <div className="grid w-full items-center gap-4 gap-y-8">
             <div className="flex flex-col space-y-1.5">
               <Label htmlFor="keywords">关键词</Label>
               <Input id="keyword" placeholder="请输入事件关键词" onChange={(e) => setKeyword(e.target.value)} value={keyword} />
@@ -68,7 +92,52 @@ export default function ControlPanel({ onControlPanelToggle }: { onControlPanelT
             </div>
             <div className="flex flex-col space-y-1.5">
               <Label htmlFor="timeRange">时间范围</Label>
-              <Input id="timeRange" placeholder="例：最近1个月、过去半年" onChange={(e) => setTimeRange(e.target.value)} value={timeRange} />
+              <Radio.Group
+                defaultValue={'relative'}
+                options={[ { value: 'relative', label: "相对时间" }, { value: 'absolute', label: "绝对时间" } ]}
+                value={timeMode}
+                onChange={(e) => setTimeMode(e.target.value)}
+              ></Radio.Group>
+              {timeMode === "relative" ? (
+                <div className="grid grid-cols-3 gap-2">
+                  <Input 
+                    className="col-span-1"
+                    type="number" 
+                    value={relativeAmount} 
+                    onChange={(e) => setRelativeAmount(Number(e.target.value))} 
+                  />
+                  <Select
+                    value={relativeUnit}
+                    options={[
+                      { value: 'second', label: '秒' },
+                      { value: 'minute', label: '分' },
+                      { value: 'hour', label: '小时' },
+                      { value: 'date', label: '日' },
+                      { value: 'month', label: '月' },
+                      { value: 'year', label: '年' },
+                    ]}
+                    onChange={(e) => setRelativeUnit(e)}
+                    className="col-span-2"
+                  />
+                </div>
+              ) : (
+                <div className="text-sm mt-1">
+                  <label>开始：</label>
+                  <Select aria-label="Picker Type" value={startPicker} onChange={setStartPicker} >
+                    <Option value="day">日</Option>
+                    <Option value="month">月</Option>
+                    <Option value="year">年</Option>
+                  </Select>
+                  <DatePicker onChange={(date) => setAbsoluteStart(date)} picker={startPicker} />
+                  <label>结束：</label>
+                  <Select aria-label="Picker Type" value={endPicker} onChange={setEndPicker} >
+                    <Option value="day">日</Option>
+                    <Option value="month">月</Option>
+                    <Option value="year">年</Option>
+                  </Select>
+                  <DatePicker onChange={(date) => setAbsoluteEnd(date)} picker={endPicker}/>
+                </div>
+              )}
             </div>
             <div className="flex flex-col space-y-1.5">
               <Label htmlFor="detailLevel">字数要求（详细程度）</Label>
