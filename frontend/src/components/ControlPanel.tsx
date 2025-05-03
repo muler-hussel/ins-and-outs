@@ -10,7 +10,7 @@ import { Select, Input, Radio, DatePicker } from "antd";
 import { ArrowLeftOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons"
 import { useControlPanel } from "@/provider/ControlPanelProvider";
 import { useState, useEffect } from "react";
-import { Dayjs } from 'dayjs';
+import dayjs, { Dayjs } from 'dayjs';
 import axios from 'axios';
 import { useNewsStore } from "@/store/newsStore";
 
@@ -33,11 +33,11 @@ export default function ControlPanel({ onControlPanelToggle }: { onControlPanelT
   useEffect(() => {
     if (defaultValues) {
       setKeyword(defaultValues.keyword);
-      setRelativeAmount(defaultValues.relativeAmount);
-      setRelativeUnit(defaultValues.relativeUnit);
+      setRelativeAmount(defaultValues.relativeAmount || 0);
+      setRelativeUnit(defaultValues.relativeUnit || "");
       setAbsoluteStart(defaultValues.absoluteStart);
       setAbsoluteEnd(defaultValues.absoluteEnd);
-      setDetailLevel(defaultValues.detailLevel);
+      setDetailLevel(defaultValues.detailLevel || 500);
       setFocus(defaultValues.focus || "");
       setStyle(defaultValues.style);
       setTimeMode('relative');
@@ -85,7 +85,9 @@ export default function ControlPanel({ onControlPanelToggle }: { onControlPanelT
       relativeAmount,
       relativeUnit,
       absoluteStart,
-      absoluteEnd
+      absoluteEnd,
+      startPicker,
+      endPicker,
     };
     try {
       const result = await axios.post('api/news/', payload);
@@ -98,7 +100,7 @@ export default function ControlPanel({ onControlPanelToggle }: { onControlPanelT
   };
 
   const { Option } = Select;
-  type PickerType = 'date';
+  type PickerType = 'date' | 'month' | 'year';
 
   return (
     <Card className="m-2 w-[300px] bg-gray-50 text-gray-700">
@@ -154,14 +156,22 @@ export default function ControlPanel({ onControlPanelToggle }: { onControlPanelT
                     <Option value="month">月</Option>
                     <Option value="year">年</Option>
                   </Select>
-                  <DatePicker onChange={(date) => setAbsoluteStart(date)} picker={startPicker} placeholder="请选择时间"/>
+                  <DatePicker 
+                    value={absoluteStart ? dayjs(absoluteStart) : null} 
+                    onChange={(date) => setAbsoluteStart(date)} 
+                    picker={startPicker} placeholder="请选择时间" 
+                  />
                   <label>结束：</label>
                   <Select aria-label="Picker Type" value={endPicker} onChange={setEndPicker} >
                     <Option value="date">日</Option>
                     <Option value="month">月</Option>
                     <Option value="year">年</Option>
                   </Select>
-                  <DatePicker onChange={(date) => setAbsoluteEnd(date)} picker={endPicker} placeholder="请选择时间" />
+                  <DatePicker 
+                    value={absoluteEnd ? dayjs(absoluteEnd) : null} 
+                    onChange={(date) => setAbsoluteEnd(date)} 
+                    picker={endPicker} placeholder="请选择时间" 
+                  />
                 </div>
               )}
             </div>

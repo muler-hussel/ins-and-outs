@@ -4,7 +4,11 @@ import { NewsService } from './news.service';
 import { NewsType } from './types';
 import { PubSub } from 'graphql-subscriptions';
 import { StarNewsDto } from './dto/starNews.dto';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, UseGuards } from '@nestjs/common';
+import { ClerkAuthGuard } from 'src/auth/clerkAuth.guard';
+import { CurrentUserId } from 'src/auth/currentUser.decorator';
+import { NewsMataData } from './dto/newsMetaData.dto';
+import { Types } from 'mongoose';
 
 interface NewsUpdatedPayload {
   userId: string;
@@ -15,6 +19,7 @@ interface NewsUpdatedVariables {
   userId: string;
 }
 
+@UseGuards(ClerkAuthGuard)
 @Injectable()
 @Resolver(() => NewsType)
 export class NewsResolver {
@@ -23,9 +28,15 @@ export class NewsResolver {
     @Inject('PUB_SUB') private pubSub: PubSub,
   ) {}
 
-  @Query(() => [NewsType])
-  async getAllNews(@Args('userId') userId: string) {
-    return this.newsService.findAllByUser(userId);
+  @Query(() => [NewsMataData])
+  async getAllNews(@CurrentUserId() userId: string) {
+    const entries = await this.newsService.findAllByUser(userId);
+    return entries.map((e) => ({
+      _id: (e._id as Types.ObjectId).toString(),
+      content: e.content,
+      generateAt: e.generateAt.toISOString(),
+      starred: e.starred,
+    }));
   }
 
   @Query(() => [NewsType])

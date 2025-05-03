@@ -23,6 +23,16 @@ export class GenerateNewsDto {
   relativeUnit?: string;
 
   // 绝对，前端dayjs转isostring后传入
+  @Field()
+  @IsString()
+  @IsIn(['date', 'month', 'year'])
+  startPicker: string;
+
+  @Field()
+  @IsString()
+  @IsIn(['date', 'month', 'year'])
+  endPicker: string;
+
   @Field() @IsOptional() @IsString() absoluteStart?: string;
   @Field() @IsOptional() @IsString() absoluteEnd?: string;
 

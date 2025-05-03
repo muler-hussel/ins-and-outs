@@ -12,6 +12,13 @@ type Mutation {
   unstarNews(newsId: String!, userId: String!): Boolean!
 }
 
+type NewsMataData {
+  _id: String!
+  content: String!
+  generateAt: String!
+  starred: Boolean!
+}
+
 type NewsType {
   absoluteEnd: String
   absoluteStart: String
@@ -37,7 +44,7 @@ type NewsType {
 }
 
 type Query {
-  getAllNews(userId: String!): [NewsType!]!
+  getAllNews: [NewsMataData!]!
   getStarredNews(userId: String!): [NewsType!]!
 }
 
@@ -47,11 +54,13 @@ input StarNewsDto {
   autoUpdate: Boolean!
   content: String!
   detailLevel: Float!
+  endPicker: String!
   focus: String!
   keyword: String!
   newsId: String!
   relativeAmount: Float!
   relativeUnit: String!
+  startPicker: String!
   style: String!
   timeMode: String!
   title: String!

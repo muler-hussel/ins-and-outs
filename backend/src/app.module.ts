@@ -8,6 +8,7 @@ import { join } from 'path';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ConfigModule } from '@nestjs/config';
 import { NewsModule } from './news/news.module';
+import { Request } from 'express';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { NewsModule } from './news/news.module';
       subscriptions: {
         'graphql-ws': true,
       },
+      context: ({ req }: { req: Request }) => ({ req }),
     }),
     ScheduleModule.forRoot(),
     NewsModule,

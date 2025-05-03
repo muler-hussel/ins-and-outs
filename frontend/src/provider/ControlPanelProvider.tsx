@@ -10,16 +10,16 @@ interface ControlPanelContextType {
 
 interface ControlPanelValues {
   keyword: string;
-  relativeAmount: number;
-  relativeUnit: string;
+  relativeAmount?: number;
+  relativeUnit?: string;
   absoluteStart: Dayjs | null;
   absoluteEnd: Dayjs | null;
   detailLevel: number;
   focus?: string;
   style: string;
-  timeMode: 'relative';
-  startPicker: 'date';
-  endPicker:  'date';
+  timeMode: 'relative' | 'absolute';
+  startPicker: 'date' | 'month' | 'year';
+  endPicker: 'date' | 'month' | 'year';
 }
 
 const ControlPanelContext = createContext<ControlPanelContextType | undefined>(undefined);

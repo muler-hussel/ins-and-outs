@@ -1,4 +1,3 @@
-import { ExecutionContext } from '@nestjs/common';
 import { Request } from 'express';
 import { verifyToken } from '@clerk/backend';
 import * as cookie from 'cookie';
@@ -8,10 +7,8 @@ interface AuthenticatedRequest extends Request {
 }
 
 export async function addUserId2Req(
-  ctx: ExecutionContext,
+  request: AuthenticatedRequest,
 ): Promise<string | null> {
-  const request: AuthenticatedRequest = ctx.switchToHttp().getRequest();
-
   const rawCookie = request.headers?.['cookie'] || '';
   let sessToken = '';
   if (rawCookie) {

@@ -26,13 +26,32 @@ export class NewsService {
     return await this.generate(prompt);
   }
 
-  async saveNews(dto: GenerateNewsDto, content: string, userId: string) {
+  async saveNews(dto: GenerateNewsDto, content: string, userId: string, generateAt: Date) {
     return this.newsEntryModel.create({
       ...dto,
       content: content,
-      generateAt: new Date(),
+      generateAt: generateAt,
       userId: userId,
+      absoluteStart: dto.absoluteStart ? new Date(dto.absoluteStart) : null,
+      absoluteEnd: dto.absoluteEnd ? new Date(dto.absoluteEnd) : null,
     });
+  }
+
+  async getParamsById(
+    newsId: string,
+    userId: string,
+  ): Promise<GenerateNewsDto> {
+    const news = await this.newsEntryModel.findById(newsId).lean();
+
+    if (!news || (news.userId && news.userId !== userId)) {
+      throw new NotFoundException('News not found or access denied');
+    }
+
+    return {
+      ...news,
+      absoluteStart: news.absoluteStart?.toISOString(),
+      absoluteEnd: news.absoluteEnd?.toISOString(),
+    };
   }
 
   async starNews(dto: StarNewsDto, userId: string) {
@@ -121,7 +140,7 @@ export class NewsService {
       (timeMode === 'relative'
         ? `${relativeAmount} ${relativeUnit} 前`
         : `从${absoluteStart}到${absoluteEnd}`) +
-      `详细程度：${detailLevel}（数值越大越详细）
+      `详细程度：${detailLevel}字
       风格：${style}
       ${focus ? `重点关注：${focus}` : ''}
 

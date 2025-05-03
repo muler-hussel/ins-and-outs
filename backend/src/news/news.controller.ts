@@ -1,7 +1,14 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Get, Param, Req } from '@nestjs/common';
 import { NewsService } from './news.service';
 import { GenerateNewsDto } from './dto/generateNews.dto';
 import { CurrentUserId } from 'src/auth/currentUser.decorator';
+import { ClerkAuthGuard } from 'src/auth/clerkAuth.guard';
+import { UseGuards } from '@nestjs/common';
+import { Request } from 'express';
+
+interface AuthenticatedRequest extends Request {
+  user?: { userId: string; sessionId: string };
+}
 
 @Controller('api/news')
 export class NewsController {
@@ -13,16 +20,33 @@ export class NewsController {
     @CurrentUserId() userId: string | null,
   ) {
     const content = await this.newsService.generateNews(dto);
-    console.log(1);
+    const generateDate = new Date();
+    let _id = '';
     if (userId) {
-      await this.newsService.saveNews(dto, content, userId);
+      const save = await this.newsService.saveNews(
+        dto,
+        content,
+        userId,
+        generateDate,
+      );
+      _id = save._id as string;
     }
-    console.log(userId);
+
     return {
-      _id: userId,
+      ...dto,
+      _id: _id,
       content: content,
-      generateAt: new Date().toISOString(),
+      generateAt: generateDate.toISOString(),
     };
+  }
+
+  @UseGuards(ClerkAuthGuard)
+  @Get('/:id/params')
+  async getNewsParams(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return await this.newsService.getParamsById(id, req.user?.userId as string);
   }
 
   //检查新内容是否可生成，用于自动更新判定

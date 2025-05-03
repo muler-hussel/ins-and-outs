@@ -2,32 +2,33 @@ import './App.css'
 import AppSidebar from './components/AppSidebar'
 import ResultDisplay from './components/ResultDisplay'
 import ControlPanel from './components/ControlPanel';
-import { useState } from 'react';
-import { ControlPanelProvider } from './provider/ControlPanelProvider';
+import { ControlPanelProvider, useControlPanel } from './provider/ControlPanelProvider';
 import { StarNewsModal } from './components/modal/StarNewsModal';
 import { useModal } from './hooks/use-modal';
+import { useLoadNewsIfSignedIn } from './hooks/useLoadNewsIfSignedIn';
 
 export default function App() {
-  const [showControlPanel, setShowControlPanel] = useState(false);
-  const modal = useModal();
-
-  const toggleControlPanel = () => {
-    setShowControlPanel(true);
-  };
-
-  const exitControlPanel = () => {
-    setShowControlPanel(false);
-  };
-
+  useLoadNewsIfSignedIn();
   return (
     <ControlPanelProvider>
+      <MainAppLayout />
+    </ControlPanelProvider>
+  );
+}
+
+function MainAppLayout() {
+  const modal = useModal();
+  const { show, closePanel, openPanel } = useControlPanel();
+
+  return (
+    <>
       <main className='flex flex-row w-screen h-screen relative bg-indigo-50'>
-        <AppSidebar onControlPanelToggle={toggleControlPanel} />
-        {showControlPanel && (
-          <ControlPanel onControlPanelToggle={exitControlPanel} />
+        <AppSidebar onControlPanelToggle={openPanel} />
+        {show && (
+          <ControlPanel onControlPanelToggle={closePanel} />
         )}
         <div className="flex-1 overflow-auto">
-          <ResultDisplay onControlPanelToggle={toggleControlPanel} />
+          <ResultDisplay onControlPanelToggle={openPanel} />
         </div>
       </main>
       <StarNewsModal
@@ -36,15 +37,14 @@ export default function App() {
         onConfirm={(data) => {
           modal.onConfirm?.(data);
           modal.closeModal();
-        }}
+        } }
         onDelete={() => {
           modal.onDelete?.();
           modal.closeModal();
-        }}
+        } }
         initialData={modal.initialData}
         mode={modal.mode}
       />
-    </ControlPanelProvider>
-    
+    </>
   )
 }

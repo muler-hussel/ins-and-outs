@@ -1,6 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { NewsStyle } from '../newsStyle.enum';
 
 //单条新闻
 export type NewsEntryDocument = NewsEntry & Document;
@@ -19,14 +18,23 @@ export class NewsEntry extends Document {
     | 'year';
 
   //绝对时间
+  @Prop({ required: true, default: 'date' }) startPicker:
+    | 'date'
+    | 'month'
+    | 'year';
+  @Prop({ required: true, default: 'date' }) endPicker:
+    | 'date'
+    | 'month'
+    | 'year';
   @Prop() absoluteStart?: Date;
   @Prop() absoluteEnd?: Date;
 
   @Prop({ required: true }) detailLevel: number; // e.g. 1–10
   @Prop() focus?: string;
-  @Prop({ required: true }) style: NewsStyle;
+  @Prop({ required: true }) style: string;
 
   @Prop({ required: true }) content: string;
+  @Prop({ required: true }) generateAt: Date;
 
   // 用户信息，只有登录了才能收藏
   @Prop() userId: string;

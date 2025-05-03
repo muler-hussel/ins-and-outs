@@ -3,10 +3,40 @@ import { FormOutlined, RedoOutlined, StarOutlined, StarFilled } from '@ant-desig
 import { useModal } from "@/hooks/use-modal";
 import { useNewsStore } from '../store/newsStore';
 import { ScrollArea } from "./ui/scroll-area";
-import { SignedIn } from '@clerk/clerk-react';
+import { SignedIn, useUser } from '@clerk/clerk-react';
+import axios from 'axios';
+import { useControlPanel } from '@/provider/ControlPanelProvider';
+import { Dayjs } from 'dayjs';
 
-export default function ControlPanel({ onControlPanelToggle }: { onControlPanelToggle: () => void }) {
+export default function ResultDisplay({ onControlPanelToggle }: { onControlPanelToggle: () => void }) {
   const entries = useNewsStore((s) => s.entries);
+  const { isSignedIn } = useUser();
+  const { openPanel } = useControlPanel();
+
+  const handleRegenerate = async (newsId?: string, generateAt?: string) => {
+    if (isSignedIn && newsId) {
+      try {
+        const res = await axios.get(`/api/news/${newsId}/params`);
+        console.log(res.data.endPicker);
+        openPanel(res.data); 
+      } catch (error) {
+        console.error("获取参数失败：", error);
+        alert("无法获取历史参数，请重试或联系管理员。");
+      }
+    } else {
+      for (const entry of entries) {
+        if (entry.generateAt === generateAt) {
+          openPanel({
+            ...entry,
+            absoluteStart: entry.absoluteStart ? new Dayjs(entry.absoluteStart) : null,
+            absoluteEnd: entry.absoluteEnd ? new Dayjs(entry.absoluteEnd) : null,
+          })
+        } else {
+          alert("无法重新生成，缺少参数。请重新填写。");
+        }
+      }
+    }
+  }
 
   const onStarClick = (keyword: string) => {
     useModal.getState().openModal({
@@ -22,7 +52,7 @@ export default function ControlPanel({ onControlPanelToggle }: { onControlPanelT
     <ScrollArea className="m-2 h-[calc(100vh-16px)] bg-gray-50 justify-end rounded-xl">
       <div className="p-4 space-y-5 w-3/4">
         {entries.map((entry) => (
-          <div key={entry._id}>
+          <div key={entry.generateAt}>
             <div 
               className="text-gray-600 text-sm mb-3 bg-white p-4 rounded-xl shadow-sm whitespace-pre-wrap"
             >
@@ -32,7 +62,7 @@ export default function ControlPanel({ onControlPanelToggle }: { onControlPanelT
               <Popover content="重新生成" color="#f7f7f7">
                 <RedoOutlined 
                   className="px-2 py-2 hover:bg-gray-100 rounded-xl"
-                  onClick={onControlPanelToggle}
+                  onClick={() => handleRegenerate(entry._id, entry.generateAt)}
                 />
               </Popover>
               <SignedIn>

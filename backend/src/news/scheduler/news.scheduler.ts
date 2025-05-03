@@ -77,11 +77,18 @@ export class NewsScheduler {
           detailLevel: detailLevel,
           focus: focus,
           style: style,
+          startPicker: 'date',
+          endPicker: 'date',
         };
 
         const generated = await this.newsService.generateNews(dto);
 
-        const entry = await this.newsService.saveNews(dto, generated, userId);
+        const entry = await this.newsService.saveNews(
+          dto,
+          generated,
+          userId,
+          new Date(),
+        );
         entry.groupTitle = title;
 
         group.contents.push(entry._id as mongoose.Schema.Types.ObjectId);
