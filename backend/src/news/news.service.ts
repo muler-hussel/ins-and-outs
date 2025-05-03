@@ -9,7 +9,11 @@ import { NewsEntry, NewsEntryDocument } from './schemas/newEntry.schema';
 
 @Injectable()
 export class NewsService {
-  client = new OpenAI();
+  client = new OpenAI({
+    baseURL: process.env.API_URL,
+    apiKey: process.env.API_KEY,
+    timeout: 30000,
+  });
   constructor(
     @InjectModel(NewsGroup.name)
     private newsGroupModel: Model<NewsGroupDocument>,
@@ -99,7 +103,7 @@ export class NewsService {
   private buildPrompt(dto: GenerateNewsDto): string {
     const {
       keyword,
-      timeRangeType,
+      timeMode,
       relativeAmount,
       relativeUnit,
       absoluteStart,
@@ -114,7 +118,7 @@ export class NewsService {
 
       关键词：${keyword}
       时间范围：` +
-      (timeRangeType === 'relative'
+      (timeMode === 'relative'
         ? `${relativeAmount} ${relativeUnit} 前`
         : `从${absoluteStart}到${absoluteEnd}`) +
       `详细程度：${detailLevel}（数值越大越详细）
@@ -126,17 +130,21 @@ export class NewsService {
   }
 
   private async generate(prompt: string): Promise<string> {
-    const response = await this.client.responses.create({
+    const response = await this.client.chat.completions.create({
       model: 'gpt-3.5-turbo',
-      input: [
+      messages: [
         {
           role: 'user',
           content: prompt,
         },
       ],
-      temperature: 0.7,
     });
 
-    return response.output_text;
+    const content = response.choices[0]?.message?.content;
+    if (!content) {
+      throw new Error('OpenAI 返回了空内容');
+    }
+
+    return content;
   }
 }

@@ -4,6 +4,7 @@ import { NewsService } from './news.service';
 import { NewsType } from './types';
 import { PubSub } from 'graphql-subscriptions';
 import { StarNewsDto } from './dto/starNews.dto';
+import { Inject, Injectable } from '@nestjs/common';
 
 interface NewsUpdatedPayload {
   userId: string;
@@ -14,15 +15,12 @@ interface NewsUpdatedVariables {
   userId: string;
 }
 
-interface MyPubSub extends PubSub {
-  asyncIterator<T>(triggerName: string): AsyncIterator<T>;
-}
-
+@Injectable()
 @Resolver(() => NewsType)
 export class NewsResolver {
   constructor(
     private readonly newsService: NewsService,
-    private pubSub: MyPubSub,
+    @Inject('PUB_SUB') private pubSub: PubSub,
   ) {}
 
   @Query(() => [NewsType])
@@ -37,10 +35,10 @@ export class NewsResolver {
 
   @Mutation(() => Boolean)
   async starNews(
-    @Args('starDto') starDto: StarNewsDto,
+    @Args('starNewsDto') starNewsDto: StarNewsDto,
     @Args('userId') userId: string,
   ) {
-    return this.newsService.starNews(starDto, userId);
+    return this.newsService.starNews(starNewsDto, userId);
   }
 
   @Mutation(() => Boolean)
@@ -56,7 +54,7 @@ export class NewsResolver {
       payload.userId === variables.userId,
   })
   onNewsUpdated(@Args('userId') userId: string) {
-    return this.pubSub.asyncIterator(`newsUpdated_${userId}`);
+    return this.pubSub.asyncIterableIterator(`newsUpdated_${userId}`);
   }
 
   // 后端推送

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Button } from "antd";
-import { AntDesignOutlined, SearchOutlined, FormOutlined, LoginOutlined, SettingOutlined } from '@ant-design/icons';
+import { Button, Popover } from "antd";
+import { BlockOutlined, SearchOutlined, FormOutlined, LoginOutlined, SettingOutlined, ContainerOutlined } from '@ant-design/icons';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
@@ -50,23 +50,34 @@ function AppSidebar({ onControlPanelToggle }: { onControlPanelToggle: () => void
       {/* 顶部开关 */}
       {isOpen && 
         <div className="flex flex-row justify-between align-middle">
-          <Button onClick={toggleSidebar} type="text" size="large" icon={<AntDesignOutlined />} >
-            <div className="text-indigo-500 font-bold">
-              来龙去脉
-            </div>
-          </Button>
-          <div className="mt-2 space-x-2">
-            <SearchOutlined className="cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50" />
+          <Popover content="收起边栏" color="#f7f7f7">
+            <Button onClick={toggleSidebar} type="text" size="large" icon={<BlockOutlined />} >
+              <div className="text-indigo-500 font-bold">
+                来龙去脉
+              </div>
+            </Button>
+          </Popover>
+          <SignedIn>
+            <Popover content="返回主页" color="#f7f7f7">
+              <ContainerOutlined className="cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50" />
+            </Popover>
+            <Popover content="搜索标题" color="#f7f7f7">
+              <SearchOutlined className="cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50" />
+            </Popover>
+          </SignedIn>
+          <Popover content="创建新生成" color="#f7f7f7">
             <FormOutlined className="cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50" onClick={onControlPanelToggle}/>
-          </div>
+          </Popover>
         </div>
       }
       {!isOpen && 
-        <Button onClick={toggleSidebar} type="text" size="large" icon={<AntDesignOutlined />} >
-        </Button>
+        <Popover content="打开边栏" color="#f7f7f7">
+          <Button onClick={toggleSidebar} type="text" size="large" icon={<BlockOutlined />} >
+          </Button>
+        </Popover>
       }
 
-      <Separator className="mt-3 mb-10"/>
+      <Separator className="mt-3 mb-6"/>
 
       {/* 历史滚动列表 */}
       <ScrollArea className="flex-1 w-full"> 

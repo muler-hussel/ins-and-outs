@@ -7,7 +7,7 @@ export type NewsEntryDocument = NewsEntry & Document;
 @Schema()
 export class NewsEntry extends Document {
   @Prop({ required: true }) keyword: string;
-  @Prop() timeRangeType: 'relative' | 'absolute';
+  @Prop() timeMode: 'relative' | 'absolute';
   // 相对时间（例如：7 天）
   @Prop() relativeAmount?: number;
   @Prop() relativeUnit?:

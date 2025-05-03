@@ -7,7 +7,7 @@ export type NewsGroupDocument = NewsGroup & Document;
 @Schema({ timestamps: true })
 export class NewsGroup extends Document {
   @Prop({ required: true }) keyword: string;
-  @Prop() timeRangeType: 'relative';
+  @Prop() timeMode: 'relative';
   // 相对时间（例如：7 天）
   @Prop() relativeAmount?: number;
   @Prop() relativeUnit?:

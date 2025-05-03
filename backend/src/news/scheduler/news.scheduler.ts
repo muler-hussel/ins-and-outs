@@ -40,7 +40,7 @@ export class NewsScheduler {
     const {
       keyword,
       detailLevel,
-      timeRangeType,
+      timeMode,
       focus,
       style,
       relativeAmount,
@@ -62,16 +62,16 @@ export class NewsScheduler {
         relativeUnit as dayjs.ManipulateType,
       );
       //连接新闻api查询 TODO
-      const hasNew = await this.newsService.checkForNewArticles(
-        keyword,
-        startDate,
-        endDate,
-      );
-
+      // const hasNew = await this.newsService.checkForNewArticles(
+      //   keyword,
+      //   startDate,
+      //   endDate,
+      // );
+      const hasNew = true;
       if (hasNew) {
         const dto: GenerateNewsDto = {
           keyword: keyword,
-          timeRangeType: timeRangeType,
+          timeMode: timeMode,
           relativeAmount: relativeAmount,
           relativeUnit: relativeUnit,
           detailLevel: detailLevel,

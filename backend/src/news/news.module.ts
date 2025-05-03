@@ -6,7 +6,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { NewsGroup, NewsGroupSchema } from './schemas/newsGroup.schema';
 import { NewsResolver } from './news.resolver';
 import { NewsEntry, NewsEntrySchema } from './schemas/newEntry.schema';
-
+import { PubSub } from 'graphql-subscriptions';
+import { NewsController } from './news.controller';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -15,7 +16,16 @@ import { NewsEntry, NewsEntrySchema } from './schemas/newEntry.schema';
       { name: NewsEntry.name, schema: NewsEntrySchema },
     ]),
   ],
-  providers: [NewsService, NewsScheduler, NewsResolver],
+  providers: [
+    NewsService,
+    NewsScheduler,
+    NewsResolver,
+    {
+      provide: 'PUB_SUB', // 令牌名称必须与注入时一致
+      useValue: new PubSub(), // 直接提供实例
+    },
+  ],
+  controllers: [NewsController],
 })
 
 //每次启动都调用自动更新

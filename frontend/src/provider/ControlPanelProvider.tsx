@@ -17,6 +17,9 @@ interface ControlPanelValues {
   detailLevel: number;
   focus?: string;
   style: string;
+  timeMode: 'relative';
+  startPicker: 'date';
+  endPicker:  'date';
 }
 
 const ControlPanelContext = createContext<ControlPanelContextType | undefined>(undefined);

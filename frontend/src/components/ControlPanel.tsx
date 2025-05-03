@@ -7,10 +7,12 @@ import {
 } from "@/components/ui/card"
 import { Label } from "./ui/label"
 import { Select, Input, Radio, DatePicker } from "antd";
-import { ArrowLeftOutlined, RedoOutlined, CheckOutlined } from "@ant-design/icons"
+import { ArrowLeftOutlined, DeleteOutlined, CheckOutlined } from "@ant-design/icons"
 import { useControlPanel } from "@/provider/ControlPanelProvider";
 import { useState, useEffect } from "react";
 import { Dayjs } from 'dayjs';
+import axios from 'axios';
+import { useNewsStore } from "@/store/newsStore";
 
 export default function ControlPanel({ onControlPanelToggle }: { onControlPanelToggle: () => void }) {
   const { defaultValues, closePanel } = useControlPanel();
@@ -26,6 +28,8 @@ export default function ControlPanel({ onControlPanelToggle }: { onControlPanelT
   const [startPicker, setStartPicker] = useState<PickerType>('date');
   const [endPicker, setEndPicker] = useState<PickerType>('date');
 
+  const addEntry = useNewsStore((s) => s.addEntry);
+
   useEffect(() => {
     if (defaultValues) {
       setKeyword(defaultValues.keyword);
@@ -36,6 +40,9 @@ export default function ControlPanel({ onControlPanelToggle }: { onControlPanelT
       setDetailLevel(defaultValues.detailLevel);
       setFocus(defaultValues.focus || "");
       setStyle(defaultValues.style);
+      setTimeMode('relative');
+      setStartPicker('date');
+      setEndPicker('date')
     } else {
       resetForm();
     }
@@ -50,9 +57,12 @@ export default function ControlPanel({ onControlPanelToggle }: { onControlPanelT
     setDetailLevel(500);
     setFocus("");
     setStyle("");
+    setTimeMode('relative');
+    setStartPicker('date');
+    setEndPicker('date')
   };
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     if (!keyword || !style || !detailLevel) {
       alert("关键词、字数要求和风格选择不能为空！");
       return;
@@ -66,9 +76,25 @@ export default function ControlPanel({ onControlPanelToggle }: { onControlPanelT
       return;
     }
 
-    // 调用生成 API TODO
-    console.log({ keyword, detailLevel, focus, style, timeMode, relativeAmount, relativeUnit, absoluteEnd, absoluteStart });
-    closePanel();
+    const payload = {
+      keyword,
+      style,
+      detailLevel,
+      focus,
+      timeMode,
+      relativeAmount,
+      relativeUnit,
+      absoluteStart,
+      absoluteEnd
+    };
+    try {
+      const result = await axios.post('api/news/', payload);
+      console.log(result.data);
+      addEntry(result.data);
+      closePanel();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const { Option } = Select;
@@ -124,18 +150,18 @@ export default function ControlPanel({ onControlPanelToggle }: { onControlPanelT
                 <div className="text-sm mt-1">
                   <label>开始：</label>
                   <Select aria-label="Picker Type" value={startPicker} onChange={setStartPicker} >
-                    <Option value="day">日</Option>
+                    <Option value="date">日</Option>
                     <Option value="month">月</Option>
                     <Option value="year">年</Option>
                   </Select>
-                  <DatePicker onChange={(date) => setAbsoluteStart(date)} picker={startPicker} />
+                  <DatePicker onChange={(date) => setAbsoluteStart(date)} picker={startPicker} placeholder="请选择时间"/>
                   <label>结束：</label>
                   <Select aria-label="Picker Type" value={endPicker} onChange={setEndPicker} >
-                    <Option value="day">日</Option>
+                    <Option value="date">日</Option>
                     <Option value="month">月</Option>
                     <Option value="year">年</Option>
                   </Select>
-                  <DatePicker onChange={(date) => setAbsoluteEnd(date)} picker={endPicker}/>
+                  <DatePicker onChange={(date) => setAbsoluteEnd(date)} picker={endPicker} placeholder="请选择时间" />
                 </div>
               )}
             </div>
@@ -170,7 +196,7 @@ export default function ControlPanel({ onControlPanelToggle }: { onControlPanelT
         <div className="flex space-x-2 cursor-pointer px-2 py-2 rounded-2xl 
           hover:bg-indigo-100 hover:text-gray-600"
           onClick={resetForm}>
-          <RedoOutlined />
+          <DeleteOutlined />
           <p className="text-sm">清空</p>
         </div>
         <div className="flex space-x-2 cursor-pointer px-2 py-2 rounded-2xl 

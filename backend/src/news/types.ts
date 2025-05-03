@@ -24,7 +24,7 @@ export class NewsType {
   detailLevel: number;
 
   @Field()
-  timeRangeType: string;
+  timeMode: string;
   @Field({ nullable: true })
   relativeAmount?: number;
   @Field({ nullable: true })
