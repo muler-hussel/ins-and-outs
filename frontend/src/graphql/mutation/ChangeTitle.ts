@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client"
-export const GET_ALL_TITLES = gql`
-  query GetAllTitles {
-    getAllTitles {
+export const CHANGE_TITLE = gql`
+  mutation ChangeTitle($titleMetaData: TitleMetaData!) {
+    changeTitle(titleMetaData: $titleMetaData) {
       titleId
       title
       autoUpdate

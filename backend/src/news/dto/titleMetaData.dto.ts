@@ -1,8 +1,8 @@
-import { Field, ObjectType } from '@nestjs/graphql';
+import { Field, InputType } from '@nestjs/graphql';
 import { IsBoolean, IsNumber, IsString } from 'class-validator';
 
-@ObjectType()
-export class StarNewsMetaData {
+@InputType()
+export class TitleMetaData {
   @Field()
   @IsString()
   titleId: string;

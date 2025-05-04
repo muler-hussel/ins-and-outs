@@ -11,15 +11,21 @@ import { useMutation } from '@apollo/client';
 import { STAR_NEWS } from '@/graphql/mutation/StarNews';
 import { UN_STAR_NEWS } from '@/graphql/mutation/UnStarNews';
 import { useLoadTitlesIfSignedIn } from '@/hooks/use-loadTitlesIfSignedIn';
+import { useLoadNewsOfTitle } from '@/hooks/use-loadNewsOfTitle';
+import { useParams } from 'react-router';
+import { useLoadNewsIfSignedIn } from '@/hooks/use-loadNewsIfSignedIn';
 
 export default function ResultDisplay({ onControlPanelToggle }: { onControlPanelToggle: () => void }) {
-  // const entries = useNewsStore((s) => s.entries);
+  const { titleId } = useParams<{ titleId: string }>();
   const { updateStarredState, entries } = useNewsStore();
   const { isSignedIn } = useUser();
   const { openPanel } = useControlPanel();
   const [starNews] = useMutation(STAR_NEWS);
   const [unstarNews] = useMutation(UN_STAR_NEWS);
   const { loadTitles } = useLoadTitlesIfSignedIn(); 
+  const { loadNewsOfTitles } = useLoadNewsOfTitle();
+  const { loadNews } = useLoadNewsIfSignedIn();
+  const { loading } = titleId ? loadNewsOfTitles() : loadNews();
 
   const handleRegenerate = async (newsId?: string, generateAt?: string) => {
     if (isSignedIn && newsId) {

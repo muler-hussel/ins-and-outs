@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 
-type StarredTitles = {
+export type StarredTitles = {
+  titleId: string;
   title: string;
   autoUpdate: boolean;
   updateFreqAmount?: number;

@@ -1,27 +1,60 @@
 import { useState, useEffect } from "react";
 import { Button, Popover } from "antd";
-import { BlockOutlined, SearchOutlined, FormOutlined, LoginOutlined, SettingOutlined, ContainerOutlined } from '@ant-design/icons';
+import { BlockOutlined, FormOutlined, LoginOutlined, SettingOutlined, ContainerOutlined } from '@ant-design/icons';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
-import { useModal } from "@/hooks/use-modal";
-import { useStarredStore } from "@/store/useStarredStore";
+import { StarNewsFormData, useModal } from "@/hooks/use-modal";
+import { StarredTitles, useStarredStore } from "@/store/starredStore";
+import { useNavigate } from "react-router";
+import { CHANGE_TITLE } from "@/graphql/mutation/ChangeTitle";
+import { useMutation } from "@apollo/client";
+import { useLoadTitlesIfSignedIn } from "@/hooks/use-loadTitlesIfSignedIn";
 
 function AppSidebar({ onControlPanelToggle }: { onControlPanelToggle: () => void }) {
   const [isOpen, setIsOpen] = useState(true);
   const { starredTitles } = useStarredStore();
+  const navigate = useNavigate();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [changeTitle] = useMutation(CHANGE_TITLE);
+  const { loadTitles } = useLoadTitlesIfSignedIn(); 
 
-  const onSetClick = (keyword: string) => {
+  const onSetClick = (e: StarredTitles) => {
+    if (!e.titleId) {
+      alert("请登录。");
+    }
     useModal.getState().openModal({
       mode: 'edit',
-      initialData: { title: keyword, autoUpdate: false },
-      onConfirm: async () => {
-        // 调用后端接口
-      },
-    });
+      initialData: { ...e },
+      onConfirm: async (formData: StarNewsFormData) => {
+        try {
+          await changeTitle ({
+            variables: {
+              titleMetaData: {
+                ...formData,
+                titleId: e.titleId,
+                lastUpdatedAt: e.lastUpdatedAt,
+              }
+            }
+          });
+          loadTitles();
+        } catch (error) {
+          alert(error);
+        }
+    }});
   };
 
   const toggleSidebar = () => setIsOpen(!isOpen);
+
+  const onTitleClick = (titleId: string) => {
+    setSelectedId(titleId);
+    navigate(`/${titleId}`);
+  }
+
+  const onBackClick = () => {
+    setSelectedId(null);
+    navigate("/")
+  }
 
   const isToday = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -67,10 +100,10 @@ function AppSidebar({ onControlPanelToggle }: { onControlPanelToggle: () => void
           </Popover>
           <SignedIn>
             <Popover content="返回主页" color="#f7f7f7">
-              <ContainerOutlined className="cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50" />
-            </Popover>
-            <Popover content="搜索标题" color="#f7f7f7">
-              <SearchOutlined className="cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50" />
+              <ContainerOutlined 
+                className="cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50" 
+                onClick={() => onBackClick()}
+                />
             </Popover>
           </SignedIn>
           <Popover content="创建新生成" color="#f7f7f7">
@@ -95,24 +128,28 @@ function AppSidebar({ onControlPanelToggle }: { onControlPanelToggle: () => void
             {<p className="font-bold text-indigo-400 text-sm mb-2">今日更新</p>}
             <ul className="ml-2">
               {todayUpdated.map((e) => (
-                <div className="flex justify-between cursor-pointer px-2 py-2 rounded-2xl 
-                  hover:bg-gray-50 active:bg-gray-50 active:text-indigo-400">
-                  <li className="text-sm text-gray-700 ">
+                <div className={`flex justify-between cursor-pointer px-2 py-2 rounded-2xl 
+                  hover:bg-gray-50 active:bg-gray-50 active:text-indigo-400
+                  ${selectedId === e.titleId ? 'bg-gray-50 text-indigo-400' : 'text-gray-700'}`}
+                >
+                  <li className="text-sm" onClick={() => onTitleClick(e.titleId)}>
                     {e.title}
                   </li>
-                  <SettingOutlined onClick={() => onSetClick(e.title)}/>
+                  <SettingOutlined onClick={() => onSetClick(e)}/>
                 </div>
               ))}
             </ul>
             {<p className="font-bold text-indigo-400 text-sm mt-5 mb-2">历史收藏</p>}
             <ul className="ml-2">
               {older.map((e) => (
-                <div className="flex justify-between cursor-pointer px-2 py-2 rounded-2xl 
-                  hover:bg-gray-50 active:bg-gray-50 active:text-indigo-400">
-                  <li className="text-sm text-gray-700 ">
+                <div className={`flex justify-between cursor-pointer px-2 py-2 rounded-2xl 
+                  hover:bg-gray-50 active:bg-gray-50 active:text-indigo-400
+                  ${selectedId === e.titleId ? 'bg-gray-50 text-indigo-400' : 'text-gray-700'}`}
+                >
+                  <li className="text-sm" onClick={() => onTitleClick(e.titleId)}>
                     {e.title}
                   </li>
-                  <SettingOutlined onClick={() => onSetClick(e.title)}/>
+                  <SettingOutlined onClick={() => onSetClick(e)}/>
                 </div>
               ))}
             </ul>

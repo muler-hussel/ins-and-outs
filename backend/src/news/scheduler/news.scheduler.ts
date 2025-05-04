@@ -36,7 +36,6 @@ export class NewsScheduler {
 
   // 动态注册定时任务
   async scheduleNewsJob(group: NewsGroup) {
-    // const autoGroups = await this.newsGroupModel.find({ autoUpdate: true });
     const {
       keyword,
       detailLevel,
@@ -49,9 +48,15 @@ export class NewsScheduler {
       updateFreqType,
       title,
       userId,
+      lastUpdatedAt,
     } = group;
 
-    const cronTime = this.convertToCron(updateFreqAmount, updateFreqType);
+    if (!updateFreqAmount || !updateFreqType) return;
+    const cronTime = this.convertToCron(
+      lastUpdatedAt,
+      updateFreqAmount,
+      updateFreqType,
+    );
     const job = new CronJob(cronTime, async () => {
       if (!relativeAmount || !relativeUnit) return;
       // 构建新的时间范围
@@ -104,12 +109,36 @@ export class NewsScheduler {
   }
 
   // 将频率转换为 cron 表达式
-  convertToCron(amount?: number, type?: string): string {
-    if (type === 'second') return `/${amount} * * * * *`;
-    if (type === 'minute') return `*/${amount} * * * *`;
-    if (type === 'hour') return `0 */${amount} * * *`;
-    if (type === 'date') return `0 0 */${amount} * *`;
-    if (type === 'month') return `0 0 0 */${amount} *`;
-    return `* * * * *`; // 默认实时更新
+  convertToCron(lastUpdatedAt: Date, amount: number, type: string): string {
+    const nextDate = lastUpdatedAt;
+
+    switch (type) {
+      case 'second':
+        nextDate.setSeconds(nextDate.getSeconds() + amount);
+        break;
+      case 'minute':
+        nextDate.setMinutes(nextDate.getMinutes() + amount);
+        break;
+      case 'hour':
+        nextDate.setHours(nextDate.getHours() + amount);
+        break;
+      case 'date':
+        nextDate.setDate(nextDate.getDate() + amount);
+        break;
+      case 'month':
+        nextDate.setMonth(nextDate.getMonth() + amount);
+        break;
+      default:
+        throw new Error('Invalid type');
+    }
+
+    const second = nextDate.getSeconds();
+    const minute = nextDate.getMinutes();
+    const hour = nextDate.getHours();
+    const day = nextDate.getDate();
+    const month = nextDate.getMonth() + 1;
+
+    // Cron format: second minute hour day month weekday
+    return `${second} ${minute} ${hour} ${day} ${month} *`;
   }
 }

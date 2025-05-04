@@ -1,14 +1,14 @@
 import { Resolver, Query, Mutation, Args, Subscription } from '@nestjs/graphql';
 import { NewsService } from './news.service';
-import { NewsType } from './types';
+import { NewsType } from './dto/types';
 import { PubSub } from 'graphql-subscriptions';
 import { StarNewsDto } from './dto/starNews.dto';
 import { Inject, Injectable, UseGuards } from '@nestjs/common';
 import { ClerkAuthGuard } from 'src/auth/clerkAuth.guard';
 import { CurrentUserId } from 'src/auth/currentUser.decorator';
 import { NewsMataData } from './dto/newsMetaData.dto';
-import { Types } from 'mongoose';
-import { StarNewsMataData } from './dto/starNewsMetaData.dto';
+import { StarNewsMetaData } from './dto/starNewsMetaData.dto';
+import { TitleMetaData } from './dto/titleMetaData.dto';
 
 interface NewsUpdatedPayload {
   userId: string;
@@ -19,6 +19,7 @@ interface NewsUpdatedVariables {
   userId: string;
 }
 
+@UseGuards(ClerkAuthGuard)
 @Injectable()
 @Resolver(() => NewsType)
 export class NewsResolver {
@@ -30,25 +31,17 @@ export class NewsResolver {
   @Query(() => [NewsMataData])
   async getAllNews(@CurrentUserId() userId: string) {
     const entries = await this.newsService.findAllByUser(userId);
-    return entries.map((e) => ({
-      _id: (e._id as Types.ObjectId).toString(),
-      content: e.content,
-      generateAt: e.generateAt.toISOString(),
-      starred: e.starred,
+    return entries.map(({ generateAt, ...rest }) => ({
+      generateAt: generateAt.toISOString(),
+      ...rest,
     }));
   }
 
-  @UseGuards(ClerkAuthGuard)
-  @Query(() => [StarNewsMataData])
+  @Query(() => [StarNewsMetaData])
   async getAllTitles(@CurrentUserId() userId: string) {
-    const entries = await this.newsService.findTitlesByUser(userId);
-    return entries.map((e) => ({
-      title: e.title,
-      lastUpdatedAt: e.lastUpdatedAt.toISOString(),
-    }));
+    return this.newsService.findTitlesByUser(userId);
   }
 
-  @UseGuards(ClerkAuthGuard)
   @Mutation(() => Boolean)
   async starNews(
     @Args('starNewsDto') starNewsDto: StarNewsDto,
@@ -57,13 +50,32 @@ export class NewsResolver {
     return this.newsService.starNews(starNewsDto, userId);
   }
 
-  @UseGuards(ClerkAuthGuard)
   @Mutation(() => Boolean)
   async unstarNews(
     @Args('newsId') newsId: string,
     @CurrentUserId() userId: string,
   ) {
     return this.newsService.unstarNews(newsId, userId);
+  }
+
+  @Query(() => [NewsMataData])
+  async getNewsByTitleId(
+    @Args('titleId') titleId: string,
+    @CurrentUserId() userId: string,
+  ) {
+    const entries = await this.newsService.getNewsByTitleId(titleId, userId);
+    return entries.map(({ generateAt, ...rest }) => ({
+      generateAt: generateAt.toISOString(),
+      ...rest,
+    }));
+  }
+
+  @Mutation(() => StarNewsMetaData)
+  async changeTitle(
+    @Args('titleMetaData') titleMetaData: TitleMetaData,
+    @CurrentUserId() userId: string,
+  ) {
+    return this.newsService.changeTitle(titleMetaData, userId);
   }
 
   @Subscription(() => NewsType, {

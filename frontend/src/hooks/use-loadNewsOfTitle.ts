@@ -1,24 +1,23 @@
 import { useEffect } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNewsStore } from '@/store/newsStore';
-import { useAuth } from '@clerk/clerk-react';
-import { GET_ALL_NEWS } from '@/graphql/query/GetAllNews';
+import { GET_NEWS_BY_TITLE_ID } from '@/graphql/query/GetNewsByTitleId';
 import { useParams } from 'react-router';
 
-export function useLoadNewsIfSignedIn() {
-  const { isSignedIn, isLoaded } = useAuth();
+export function useLoadNewsOfTitle() {
   const { setEntries } = useNewsStore();
   const { titleId } = useParams<{ titleId: string }>();
 
-  const { data, loading, refetch } = useQuery(GET_ALL_NEWS, {
-    skip: !!titleId || !isSignedIn || !isLoaded, // 不登录就不发请求，选中标题时不加载
+  const { data, loading, refetch  } = useQuery(GET_NEWS_BY_TITLE_ID, {
+    skip: !titleId,
+    variables: { titleId: titleId },
   });
 
-  const loadNews = async () => {
+  const loadNewsOfTitles = async () => {
     try {
       const { data } = await refetch();
-      if (data?.getAllNews) {
-        const sorted = [...data.getAllNews].sort((a, b) =>
+      if (data?.getNewsByTitleId) {
+        const sorted = [...data.getNewsByTitleId].sort((a, b) =>
           new Date(a.generateAt).getTime() - new Date(b.generateAt).getTime()
         );
         setEntries(sorted);
@@ -29,13 +28,13 @@ export function useLoadNewsIfSignedIn() {
   };
 
   useEffect(() => {
-    if (data?.getAllNews) {
-      const sorted = [...data.getAllNews].sort((a, b) =>
+    if (data?.getNewsByTitleId) {
+      const sorted = [...data.getNewsByTitleId].sort((a, b) =>
         new Date(a.generateAt).getTime() - new Date(b.generateAt).getTime()
       );
       setEntries(sorted);
     }
   }, [data, setEntries]);
 
-  return { loading, loadNews };
+  return { loading, loadNewsOfTitles };
 }

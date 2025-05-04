@@ -7,6 +7,7 @@ import { StarNewsModal } from './components/modal/StarNewsModal';
 import { useModal } from './hooks/use-modal';
 import { useLoadNewsIfSignedIn } from './hooks/use-loadNewsIfSignedIn';
 import { useLoadTitlesIfSignedIn } from './hooks/use-loadTitlesIfSignedIn';
+import { Routes, Route } from "react-router"
 
 export default function App() {
   useLoadNewsIfSignedIn();
@@ -14,7 +15,10 @@ export default function App() {
   
   return (
     <ControlPanelProvider>
-      <MainAppLayout />
+      <Routes>
+        <Route path="/" element={<MainAppLayout />} />
+        <Route path="/:titleId" element={<MainAppLayout />} />
+      </Routes>
     </ControlPanelProvider>
   );
 }

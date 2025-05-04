@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { GenerateNewsDto } from './dto/generateNews.dto';
@@ -10,6 +11,8 @@ import { InjectModel } from '@nestjs/mongoose';
 import { NewsGroup, NewsGroupDocument } from './schemas/newsGroup.schema';
 import { Model } from 'mongoose';
 import { NewsEntry, NewsEntryDocument } from './schemas/newEntry.schema';
+import { StarNewsMetaData } from './dto/starNewsMetaData.dto';
+import { TitleMetaData } from './dto/titleMetaData.dto';
 
 @Injectable()
 export class NewsService {
@@ -138,15 +141,99 @@ export class NewsService {
   }
 
   async findAllByUser(userId: string) {
-    return this.newsEntryModel.find({ userId: userId });
+    return this.newsEntryModel
+      .find({ userId }, { _id: 1, content: 1, generateAt: 1, starred: 1 })
+      .lean();
   }
 
   async findTitlesByUser(userId: string) {
-    return this.newsGroupModel.find({ userId: userId });
+    const groups = await this.newsGroupModel
+      .find(
+        { userId: userId },
+        {
+          _id: 1,
+          title: 1,
+          autoUpdate: 1,
+          updateFreqAmount: 1,
+          updateFreqType: 1,
+          lastUpdatedAt: 1,
+        },
+      )
+      .lean();
+    return groups.map(({ _id, ...rest }) => ({
+      titleId: _id,
+      ...rest,
+    }));
   }
 
   async findStarredByUser(userId: string) {
     return this.newsGroupModel.find({ userId: userId });
+  }
+
+  async getNewsByTitleId(titleId: string, userId: string) {
+    const group = await this.newsGroupModel.findOne({
+      _id: titleId,
+      userId: userId,
+    });
+
+    if (!group) {
+      throw new NotFoundException('找不到对应的新闻历史');
+    }
+
+    return await this.newsEntryModel
+      .find(
+        { _id: { $in: group.contents } },
+        { _id: 1, content: 1, generateAt: 1, starred: 1 },
+      )
+      .lean();
+  }
+
+  async changeTitle(titleMetaData: TitleMetaData, userId: string) {
+    const { titleId, title, autoUpdate, updateFreqAmount, updateFreqType } =
+      titleMetaData;
+
+    // 开启MongoDB事务
+    const session = await this.newsGroupModel.db.startSession();
+    session.startTransaction();
+
+    try {
+      const group = await this.newsGroupModel
+        .findOneAndUpdate(
+          { _id: titleId, userId },
+          {
+            $set: {
+              title: title,
+              autoUpdate: autoUpdate,
+              updateFreqAmount: updateFreqAmount,
+              updateFreqType: updateFreqType,
+            },
+          },
+          { session, new: true }, // 返回更新后的文档
+        )
+        .exec();
+
+      if (!group) {
+        throw new NotFoundException('找不到对应的新闻历史');
+      }
+
+      if (group.title !== title) {
+        await this.newsEntryModel.updateMany(
+          { _id: { $in: group.contents } },
+          { $set: { groupTitle: title } },
+          { session },
+        );
+      }
+
+      // 提交事务
+      await session.commitTransaction();
+      return { ...titleMetaData };
+    } catch (error) {
+      // 出错时回滚
+      await session.abortTransaction();
+      throw new InternalServerErrorException('更新失败,', error);
+    } finally {
+      await session.endSession();
+    }
   }
 
   private buildPrompt(dto: GenerateNewsDto): string {
@@ -162,13 +249,15 @@ export class NewsService {
       style,
     } = dto;
 
+    const curDate = new Date().toDateString();
+
     return (
       `请根据以下条件生成一篇新闻来龙去脉概述：
 
       关键词：${keyword}
       时间范围：` +
       (timeMode === 'relative'
-        ? `${relativeAmount} ${relativeUnit} 前`
+        ? `${curDate}的${relativeAmount} ${relativeUnit} 前`
         : `从${absoluteStart}到${absoluteEnd}`) +
       `详细程度：${detailLevel}字
       风格：${style}

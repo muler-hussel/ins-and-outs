@@ -2,13 +2,13 @@ import { useEffect } from 'react';
 import { useQuery } from '@apollo/client';
 import { useAuth } from '@clerk/clerk-react';
 import { GET_ALL_TITLES } from '@/graphql/query/GetAllTitles';
-import { useStarredStore } from '@/store/useStarredStore';
+import { useStarredStore } from '@/store/starredStore';
 
 export function useLoadTitlesIfSignedIn() {
   const { isSignedIn, isLoaded } = useAuth();
   const { setStarredTitles } = useStarredStore();
 
-  const { data, refetch } = useQuery(GET_ALL_TITLES, {
+  const { data, refetch, loading } = useQuery(GET_ALL_TITLES, {
     skip: !isSignedIn || !isLoaded, // 不登录就不发请求
   });
 
@@ -27,5 +27,5 @@ export function useLoadTitlesIfSignedIn() {
     }
   }, [data, setStarredTitles]);
 
-  return { loadTitles };
+  return { loadTitles, loading };
 }
