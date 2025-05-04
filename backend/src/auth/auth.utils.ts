@@ -9,6 +9,9 @@ interface AuthenticatedRequest extends Request {
 export async function addUserId2Req(
   request: AuthenticatedRequest,
 ): Promise<string | null> {
+  if (request.user) {
+    return request.user.userId;
+  }
   const rawCookie = request.headers?.['cookie'] || '';
   let sessToken = '';
   if (rawCookie) {
@@ -33,7 +36,6 @@ export async function addUserId2Req(
   if (!verifiedToken.sub) {
     return null;
   }
-
   const userId = verifiedToken.sub;
   const sessionId = verifiedToken.sid;
   // req['user'] = { userId, sessionId };//类型不安全

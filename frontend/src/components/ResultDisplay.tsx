@@ -1,23 +1,30 @@
 import { FloatButton, Popover } from 'antd';
 import { FormOutlined, RedoOutlined, StarOutlined, StarFilled } from '@ant-design/icons';
-import { useModal } from "@/hooks/use-modal";
+import { StarNewsFormData, useModal } from "@/hooks/use-modal";
 import { useNewsStore } from '../store/newsStore';
 import { ScrollArea } from "./ui/scroll-area";
 import { SignedIn, useUser } from '@clerk/clerk-react';
 import axios from 'axios';
 import { useControlPanel } from '@/provider/ControlPanelProvider';
 import { Dayjs } from 'dayjs';
+import { useMutation } from '@apollo/client';
+import { STAR_NEWS } from '@/graphql/mutation/StarNews';
+import { UN_STAR_NEWS } from '@/graphql/mutation/UnStarNews';
+import { useLoadTitlesIfSignedIn } from '@/hooks/use-loadTitlesIfSignedIn';
 
 export default function ResultDisplay({ onControlPanelToggle }: { onControlPanelToggle: () => void }) {
-  const entries = useNewsStore((s) => s.entries);
+  // const entries = useNewsStore((s) => s.entries);
+  const { updateStarredState, entries } = useNewsStore();
   const { isSignedIn } = useUser();
   const { openPanel } = useControlPanel();
+  const [starNews] = useMutation(STAR_NEWS);
+  const [unstarNews] = useMutation(UN_STAR_NEWS);
+  const { loadTitles } = useLoadTitlesIfSignedIn(); 
 
   const handleRegenerate = async (newsId?: string, generateAt?: string) => {
     if (isSignedIn && newsId) {
       try {
         const res = await axios.get(`/api/news/${newsId}/params`);
-        console.log(res.data.endPicker);
         openPanel(res.data); 
       } catch (error) {
         console.error("获取参数失败：", error);
@@ -38,15 +45,52 @@ export default function ResultDisplay({ onControlPanelToggle }: { onControlPanel
     }
   }
 
-  const onStarClick = (keyword: string) => {
-    useModal.getState().openModal({
-      mode: 'new',
-      initialData: { title: keyword, autoUpdate: false },
-      onConfirm: async () => {
-        // 调用后端接口
-      },
-    });
-  };
+  const onStarClick = async (newsId: string) => {
+    if (!newsId) {
+      alert("请登录。");
+    }
+    try {
+      const res = await axios.get(`/api/news/${newsId}/params`);
+      useModal.getState().openModal({
+        mode: 'new',
+        initialData: { title: res.data.keyword, autoUpdate: false },
+        onConfirm: async (formData: StarNewsFormData) => {
+          try {
+            await starNews({
+              variables: {
+                starNewsDto: {
+                  ...formData,
+                  newsId: newsId,
+                  content: res.data.content,
+                }
+              }
+            });
+            updateStarredState(newsId, true);
+            loadTitles();
+          } catch (error) {
+            alert(error);
+          }
+        }
+    })}catch (error) {
+      console.error("获取参数失败：", error);
+      alert("无法获取历史参数，请重试或联系管理员。");
+    };
+  }
+
+  const unStar = async (newsId: string) => {
+    if (!newsId) {
+      alert("请登录。");
+    }
+    try {
+      await unstarNews({
+        variables: {newsId: newsId}
+      });
+      updateStarredState(newsId, false);
+      loadTitles();
+    } catch (err) {
+      alert(err);
+    }
+  }
 
   return (
     <ScrollArea className="m-2 h-[calc(100vh-16px)] bg-gray-50 justify-end rounded-xl">
@@ -66,15 +110,20 @@ export default function ResultDisplay({ onControlPanelToggle }: { onControlPanel
                 />
               </Popover>
               <SignedIn>
-                <Popover content="收藏" color="#f7f7f7">
-                  <StarOutlined 
-                    className="px-2 py-2 hover:bg-gray-100 rounded-xl"
-                    // onClick={}
-                  />
-                </Popover>
-                <Popover content="取消收藏" color="#f7f7f7">
-                  <StarFilled className="px-2 py-2 hover:bg-gray-100 rounded-xl" style={{color: "#ffe881"}} /> 
-                </Popover>
+                {entry.starred ? (
+                  <Popover content="取消收藏" color="#f7f7f7">
+                    <StarFilled className="px-2 py-2 hover:bg-gray-100 rounded-xl" style={{color: "#ffe881"}} 
+                      onClick={() => unStar(entry._id as string)}
+                    /> 
+                  </Popover>
+                ) : (
+                  <Popover content="收藏" color="#f7f7f7">
+                    <StarOutlined 
+                      className="px-2 py-2 hover:bg-gray-100 rounded-xl"
+                      onClick={() => onStarClick(entry._id as string)}
+                    />
+                  </Popover>
+                )}
               </SignedIn>
               <div className="text-xs text-gray-400 ml-auto">{new Date(entry.generateAt).toLocaleString()}</div>
             </div>

@@ -8,8 +8,8 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 scalar DateTime
 
 type Mutation {
-  starNews(starNewsDto: StarNewsDto!, userId: String!): Boolean!
-  unstarNews(newsId: String!, userId: String!): Boolean!
+  starNews(starNewsDto: StarNewsDto!): Boolean!
+  unstarNews(newsId: String!): Boolean!
 }
 
 type NewsMataData {
@@ -45,27 +45,21 @@ type NewsType {
 
 type Query {
   getAllNews: [NewsMataData!]!
-  getStarredNews(userId: String!): [NewsType!]!
+  getAllTitles: [StarNewsMataData!]!
 }
 
 input StarNewsDto {
-  absoluteEnd: String!
-  absoluteStart: String!
   autoUpdate: Boolean!
   content: String!
-  detailLevel: Float!
-  endPicker: String!
-  focus: String!
-  keyword: String!
   newsId: String!
-  relativeAmount: Float!
-  relativeUnit: String!
-  startPicker: String!
-  style: String!
-  timeMode: String!
   title: String!
   updateFreqAmount: Float!
   updateFreqType: String!
+}
+
+type StarNewsMataData {
+  lastUpdatedAt: String!
+  title: String!
 }
 
 type Subscription {

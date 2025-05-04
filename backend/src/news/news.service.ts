@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { GenerateNewsDto } from './dto/generateNews.dto';
 import { StarNewsDto } from './dto/starNews.dto';
 import OpenAI from 'openai';
@@ -26,7 +30,12 @@ export class NewsService {
     return await this.generate(prompt);
   }
 
-  async saveNews(dto: GenerateNewsDto, content: string, userId: string, generateAt: Date) {
+  async saveNews(
+    dto: GenerateNewsDto,
+    content: string,
+    userId: string,
+    generateAt: Date,
+  ) {
     return this.newsEntryModel.create({
       ...dto,
       content: content,
@@ -59,41 +68,62 @@ export class NewsService {
       _id: dto.newsId,
       userId,
     });
-
     if (!entry) {
       throw new NotFoundException('找不到对应的新闻条目');
+    }
+    const existing = await this.newsGroupModel.findOne({
+      userId: userId,
+      title: dto.title,
+    });
+    if (existing) {
+      throw new ConflictException('标题已存在');
     }
 
     entry.starred = true;
-    return this.newsGroupModel.create({
-      ...entry,
-      title: dto.title,
-      autoUpdate: dto.autoUpdate,
-      updateFreqAmount: dto.updateFreqAmount,
-      updateFreqType: dto.updateFreqType,
-      lastUpdatedAt: new Date(),
-      lastCheckedAt: new Date(),
-      content: entry._id ? [entry._id] : [],
-    });
+    entry.groupTitle = dto.title;
+    await entry.save();
+
+    try {
+      await this.newsGroupModel.create({
+        keyword: entry.keyword,
+        timeMode: entry.timeMode,
+        relativeAmount: entry.relativeAmount,
+        relativeUnit: entry.relativeUnit,
+        detailLevel: entry.detailLevel,
+        style: entry.style,
+        focus: entry.focus,
+        userId: userId,
+        title: dto.title,
+        autoUpdate: dto.autoUpdate,
+        updateFreqAmount: dto.updateFreqAmount,
+        updateFreqType: dto.updateFreqType,
+        lastUpdatedAt: new Date(),
+        lastCheckedAt: new Date(),
+        contents: entry._id ? [entry._id] : [],
+      });
+      return true;
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 
   async unstarNews(newsId: string, userId: string) {
-    const entry = await this.newsEntryModel.findOne({
-      _id: newsId,
-      userId,
-    });
+    const entry = await this.newsEntryModel.findOneAndUpdate(
+      { _id: newsId, userId },
+      { $set: { starred: false, groupTitle: undefined } },
+      { new: true },
+    );
 
-    if (!entry) {
+    if (!entry || !entry.groupTitle) {
       throw new NotFoundException('找不到对应的新闻条目');
     }
-    entry.starred = false;
 
-    if (!entry.groupTitle) return;
     await this.deleteGroup(entry.groupTitle, userId);
+    return true;
   }
 
   async deleteGroup(title: string, userId: string) {
-    const group = await this.newsGroupModel.findOne({
+    const group = await this.newsGroupModel.findOneAndDelete({
       title: title,
       userId: userId,
     });
@@ -101,18 +131,18 @@ export class NewsService {
       throw new NotFoundException('找不到对应的新闻历史');
     }
 
-    for (const contentId of group.contents) {
-      const entry = await this.newsEntryModel.findOne({ _id: contentId });
-      if (!entry) {
-        continue;
-      }
-      entry.groupTitle = undefined;
-    }
-    group.deleteOne();
+    await this.newsEntryModel.updateMany(
+      { _id: { $in: group.contents } },
+      { $unset: { groupTitle: undefined } },
+    );
   }
 
   async findAllByUser(userId: string) {
     return this.newsEntryModel.find({ userId: userId });
+  }
+
+  async findTitlesByUser(userId: string) {
+    return this.newsGroupModel.find({ userId: userId });
   }
 
   async findStarredByUser(userId: string) {

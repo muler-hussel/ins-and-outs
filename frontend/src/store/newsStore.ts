@@ -21,6 +21,7 @@ export interface NewsEntry {
   generateAt: string;
   startPicker: 'date' | 'month' | 'year';
   endPicker:  'date' | 'month' | 'year';
+  starred: boolean;
 }
 
 interface NewsStore {
@@ -28,6 +29,7 @@ interface NewsStore {
   addEntry: (entry: NewsEntry) => void;
   setEntries: (entries: NewsEntry[]) => void;
   clearEntries: () => void;
+  updateStarredState: (id: string, starred: boolean) => void;
 }
 
 export const useNewsStore = create<NewsStore>((set) => ({
@@ -36,4 +38,11 @@ export const useNewsStore = create<NewsStore>((set) => ({
   addEntry: (entry) =>
     set((state) => ({ entries: [...state.entries, entry] })),
   clearEntries: () => set({ entries: [] }),
+
+  updateStarredState: (id: string, starred: boolean) =>
+    set((state) => ({
+      entries: state.entries.map((entry) =>
+        entry._id === id ? { ...entry, starred } : entry
+      ),
+    })),
 }));

@@ -1,7 +1,6 @@
-// stores/useSaveNewsModal.ts
 import { create } from 'zustand';
 
-export interface SaveNewsFormData {
+export interface StarNewsFormData {
   title: string;
   autoUpdate: boolean;
   updateFreqAmount?: number;
@@ -10,22 +9,22 @@ export interface SaveNewsFormData {
 
 type ModalMode = 'new' | 'edit';
 
-interface SaveNewsModalState {
+interface StarNewsModalState {
   isOpen: boolean;
   mode: ModalMode;
-  initialData?: SaveNewsFormData;
-  onConfirm?: (data: SaveNewsFormData) => void;
+  initialData?: StarNewsFormData;
+  onConfirm?: (data: StarNewsFormData) => void;
   onDelete?: () => void;
   openModal: (options: {
     mode: ModalMode;
-    initialData?: SaveNewsFormData;
-    onConfirm: (data: SaveNewsFormData) => void;
+    initialData?: StarNewsFormData;
+    onConfirm: (data: StarNewsFormData) => void;
     onDelete?: () => void;
   }) => void;
   closeModal: () => void;
 }
 
-export const useModal = create<SaveNewsModalState>((set) => ({
+export const useModal = create<StarNewsModalState>((set) => ({
   isOpen: false,
   mode: 'new',
   openModal: ({ mode, initialData, onConfirm, onDelete }) =>

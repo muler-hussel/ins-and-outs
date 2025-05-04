@@ -38,8 +38,8 @@ export class NewsGroup extends Document {
   @Prop() updateFreqType?: 'second' | 'minute' | 'hour' | 'date' | 'month';
 
   //按照频率检查后，如果有新闻就更新，没有则等到有新闻再更新
-  @Prop() lastCheckedAt?: Date;
-  @Prop() lastUpdatedAt?: Date;
+  @Prop() lastCheckedAt: Date;
+  @Prop() lastUpdatedAt: Date;
   @Prop() contents: [ObjectId];
 }
 

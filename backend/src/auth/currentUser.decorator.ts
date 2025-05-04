@@ -13,12 +13,13 @@ interface GQLContext {
 
 export const CurrentUserId = createParamDecorator(
   async (data: unknown, context: ExecutionContext): Promise<string | null> => {
-    let request: AuthenticatedRequest = context.switchToHttp().getRequest();
+    let request: AuthenticatedRequest;
     if (context.getType().includes('graphql')) {
       const ctx = GqlExecutionContext.create(context);
       request = ctx.getContext<GQLContext>().req;
+    } else {
+      request = context.switchToHttp().getRequest();
     }
-
     return await addUserId2Req(request);
   },
 );

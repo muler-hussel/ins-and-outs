@@ -5,10 +5,13 @@ import ControlPanel from './components/ControlPanel';
 import { ControlPanelProvider, useControlPanel } from './provider/ControlPanelProvider';
 import { StarNewsModal } from './components/modal/StarNewsModal';
 import { useModal } from './hooks/use-modal';
-import { useLoadNewsIfSignedIn } from './hooks/useLoadNewsIfSignedIn';
+import { useLoadNewsIfSignedIn } from './hooks/use-loadNewsIfSignedIn';
+import { useLoadTitlesIfSignedIn } from './hooks/use-loadTitlesIfSignedIn';
 
 export default function App() {
   useLoadNewsIfSignedIn();
+  useLoadTitlesIfSignedIn();
+  
   return (
     <ControlPanelProvider>
       <MainAppLayout />

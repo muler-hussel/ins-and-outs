@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Modal, Switch, Button } from 'antd';
+import { Modal, Switch, Button, Select } from 'antd';
 import { Input } from '@/components/ui/input';
 
 interface StarNewsModalProps {
@@ -29,14 +29,14 @@ export const StarNewsModal = ({
   const [title, setTitle] = useState(initialData?.title || '');
   const [autoUpdate, setAutoUpdate] = useState(initialData?.autoUpdate || false);
   const [freqAmount, setFreqAmount] = useState(initialData?.updateFreqAmount || 1);
-  const [freqType, setFreqType] = useState(initialData?.updateFreqType || 'day');
+  const [freqType, setFreqType] = useState(initialData?.updateFreqType || 'date');
 
   useEffect(() => {
     if (initialData) {
       setTitle(initialData.title);
       setAutoUpdate(initialData.autoUpdate);
       setFreqAmount(initialData.updateFreqAmount ?? 1);
-      setFreqType(initialData.updateFreqType ?? 'day');
+      setFreqType(initialData.updateFreqType ?? 'date');
     }
   }, [initialData]);
 
@@ -48,7 +48,12 @@ export const StarNewsModal = ({
           <Button key="cancel" onClick={onClose}>
             取消
           </Button>,
-          <Button key="submit" type="primary" onClick={onClose}>
+          <Button 
+            key="submit" 
+            type="primary" 
+            onClick={() => 
+            onConfirm({title: title, autoUpdate: autoUpdate, updateFreqAmount: freqAmount, updateFreqType: freqType})}
+          >
             确认
           </Button>,
         </>
@@ -66,25 +71,31 @@ export const StarNewsModal = ({
       <div className="flex items-center gap-4 mb-4 text-gray-600">
         <span className="text-sm">自动更新</span>
         <Switch checked={autoUpdate} onChange={setAutoUpdate} size='small' />
-      </div>
-
-      {autoUpdate && (
-        <div className="flex gap-2 mb-4 text-gray-600">
+        {autoUpdate && (
+        <div className="flex gap-2 text-gray-600 w-2/3">
           <Input
             type="number"
-            className="w-1/2"
+            className="w-1/3"
             value={freqAmount}
             onChange={(e) => setFreqAmount(Number(e.target.value))}
-            placeholder="频率"
           />
-          <Input
-            className="w-1/2"
+          <Select
             value={freqType}
-            onChange={(e) => setFreqType(e.target.value)}
-            placeholder="单位（如 day）"
+            options={[
+              { value: 'second', label: '秒' },
+              { value: 'minute', label: '分' },
+              { value: 'hour', label: '小时' },
+              { value: 'date', label: '日' },
+              { value: 'month', label: '月' },
+            ]}
+            onChange={(e) => setFreqType(e)}
+            className="w-2/3"
           />
         </div>
       )}
+      </div>
+
+      
     </Modal>
   );
 };

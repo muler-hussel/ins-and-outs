@@ -1,5 +1,4 @@
 import { Field, InputType } from '@nestjs/graphql';
-import { GenerateNewsDto } from './generateNews.dto';
 import {
   IsBoolean,
   IsOptional,
@@ -9,7 +8,7 @@ import {
 } from 'class-validator';
 
 @InputType()
-export class StarNewsDto extends GenerateNewsDto {
+export class StarNewsDto {
   @Field()
   @IsString()
   newsId: string;
