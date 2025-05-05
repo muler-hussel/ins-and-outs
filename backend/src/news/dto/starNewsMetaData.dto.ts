@@ -1,5 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { IsBoolean, IsNumber, IsString } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
 
 @ObjectType()
 export class StarNewsMetaData {
@@ -17,11 +17,22 @@ export class StarNewsMetaData {
 
   @Field()
   @IsNumber()
+  @IsOptional()
   updateFreqAmount?: number;
 
   @Field()
   @IsString()
+  @IsOptional()
   updateFreqType?: 'second' | 'minute' | 'hour' | 'date' | 'month';
+
+  @Field()
+  @IsNumber()
+  relativeAmount: number;
+
+  @Field()
+  @IsString()
+  @IsOptional()
+  relativeUnit?: 'second' | 'minute' | 'hour' | 'date' | 'month' | 'year';
 
   @Field()
   @IsString()

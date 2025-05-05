@@ -2,11 +2,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
-
 type Mutation {
   changeTitle(titleMetaData: TitleMetaData!): StarNewsMetaData!
   starNews(starNewsDto: StarNewsDto!): Boolean!
@@ -20,28 +15,9 @@ type NewsMataData {
   starred: Boolean!
 }
 
-type NewsType {
-  absoluteEnd: String
-  absoluteStart: String
-  autoUpdate: Boolean
-  content: String!
-  detailLevel: Float!
-  focus: String
-  generateAt: DateTime!
-  generatedAt: DateTime!
-  groupTitle: String
-  isStarred: Boolean
-  keyword: String!
-  lastCheckedAt: DateTime
-  lastUpdatedAt: DateTime
-  newsId: ID!
-  relativeAmount: Float
-  relativeUnit: String
-  style: String!
-  timeMode: String!
-  updateFreqAmount: Float
-  updateFreqType: String
-  userId: String
+type NewsUpdateData {
+  news: NewsMataData!
+  titleId: String!
 }
 
 type Query {
@@ -54,6 +30,8 @@ input StarNewsDto {
   autoUpdate: Boolean!
   content: String!
   newsId: String!
+  relativeAmount: Float!
+  relativeUnit: String!
   title: String!
   updateFreqAmount: Float!
   updateFreqType: String!
@@ -62,6 +40,8 @@ input StarNewsDto {
 type StarNewsMetaData {
   autoUpdate: Boolean!
   lastUpdatedAt: String!
+  relativeAmount: Float!
+  relativeUnit: String!
   title: String!
   titleId: String!
   updateFreqAmount: Float!
@@ -69,12 +49,14 @@ type StarNewsMetaData {
 }
 
 type Subscription {
-  onNewsUpdated(userId: String!): NewsType!
+  onNewsUpdated(userId: String!): NewsUpdateData!
 }
 
 input TitleMetaData {
   autoUpdate: Boolean!
   lastUpdatedAt: String!
+  relativeAmount: Float!
+  relativeUnit: String!
   title: String!
   titleId: String!
   updateFreqAmount: Float!

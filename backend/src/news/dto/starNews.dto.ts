@@ -34,4 +34,13 @@ export class StarNewsDto {
   @Field()
   @IsString()
   content: string;
+
+  @Field()
+  @IsNumber()
+  relativeAmount: number;
+
+  @Field()
+  @IsOptional()
+  @IsString()
+  relativeUnit?: 'second' | 'minute' | 'hour' | 'date' | 'month' | 'year';
 }

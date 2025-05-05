@@ -8,7 +8,7 @@ export class NewsGroup extends Document {
   @Prop({ required: true }) keyword: string;
   @Prop() timeMode: 'relative';
   // 相对时间（例如：7 天）
-  @Prop() relativeAmount?: number;
+  @Prop() relativeAmount: number;
   @Prop() relativeUnit?:
     | 'second'
     | 'minute'

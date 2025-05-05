@@ -4,6 +4,8 @@ export const GET_ALL_TITLES = gql`
     getAllTitles {
       titleId
       title
+      relativeAmount
+      relativeUnit
       autoUpdate
       updateFreqAmount
       updateFreqType

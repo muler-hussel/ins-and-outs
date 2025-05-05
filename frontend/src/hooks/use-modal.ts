@@ -5,6 +5,8 @@ export interface StarNewsFormData {
   autoUpdate: boolean;
   updateFreqAmount?: number;
   updateFreqType?: string;
+  relativeAmount: number;
+  relativeUnit?: string;
 }
 
 type ModalMode = 'new' | 'edit';

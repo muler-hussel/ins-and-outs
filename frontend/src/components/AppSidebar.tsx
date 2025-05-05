@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button, Popover } from "antd";
+import { Button, Popover, Badge } from "antd";
 import { BlockOutlined, FormOutlined, LoginOutlined, SettingOutlined, ContainerOutlined } from '@ant-design/icons';
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Separator } from "@/components/ui/separator"
@@ -13,7 +13,7 @@ import { useLoadTitlesIfSignedIn } from "@/hooks/use-loadTitlesIfSignedIn";
 
 function AppSidebar({ onControlPanelToggle }: { onControlPanelToggle: () => void }) {
   const [isOpen, setIsOpen] = useState(true);
-  const { starredTitles } = useStarredStore();
+  const { starredTitles, clearUpdateFlag } = useStarredStore();
   const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [changeTitle] = useMutation(CHANGE_TITLE);
@@ -46,13 +46,20 @@ function AppSidebar({ onControlPanelToggle }: { onControlPanelToggle: () => void
 
   const toggleSidebar = () => setIsOpen(!isOpen);
 
+  useEffect(() => {
+    setSelectedId(localStorage.getItem('lastSelectedId') || null);
+  }, []);
+
   const onTitleClick = (titleId: string) => {
     setSelectedId(titleId);
+    localStorage.setItem('lastSelectedId', titleId);
+    clearUpdateFlag(titleId);
     navigate(`/${titleId}`);
   }
 
   const onBackClick = () => {
     setSelectedId(null);
+    localStorage.removeItem('lastSelectedId');
     navigate("/")
   }
 
@@ -135,7 +142,10 @@ function AppSidebar({ onControlPanelToggle }: { onControlPanelToggle: () => void
                   <li className="text-sm" onClick={() => onTitleClick(e.titleId)}>
                     {e.title}
                   </li>
-                  <SettingOutlined onClick={() => onSetClick(e)}/>
+                  <div className="flex items-center gap-2">
+                    {e.hasNew && <Badge status="processing" color="#aa9bfd" />}
+                    <SettingOutlined onClick={() => onSetClick(e)}/>
+                  </div>
                 </div>
               ))}
             </ul>
@@ -149,7 +159,10 @@ function AppSidebar({ onControlPanelToggle }: { onControlPanelToggle: () => void
                   <li className="text-sm" onClick={() => onTitleClick(e.titleId)}>
                     {e.title}
                   </li>
-                  <SettingOutlined onClick={() => onSetClick(e)}/>
+                  <div className="flex items-center gap-2">
+                    {!e.hasNew && <Badge status="processing" color="#aa9bfd" />}
+                    <SettingOutlined onClick={() => onSetClick(e)}/>
+                  </div>
                 </div>
               ))}
             </ul>

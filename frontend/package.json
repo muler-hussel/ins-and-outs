@@ -30,6 +30,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "graphql": "^16.11.0",
+    "graphql-ws": "^6.0.4",
     "lucide-react": "^0.503.0",
     "postcss": "^8.5.3",
     "react": "^19.0.0",

@@ -48,14 +48,4 @@ export class NewsController {
   ) {
     return await this.newsService.getParamsById(id, req.user?.userId as string);
   }
-
-  //检查新内容是否可生成，用于自动更新判定
-  // @Get('check')
-  // async checkNews(@Query('keyword') keyword: string, @Query('start') start: string, @Query('end') end: string) {
-  //   return this.newsService.checkForNewArticles(
-  //     keyword,
-  //     new Date(start),
-  //     new Date(end),
-  //   );
-  // }
 }

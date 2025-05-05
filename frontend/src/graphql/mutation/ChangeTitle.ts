@@ -4,6 +4,8 @@ export const CHANGE_TITLE = gql`
     changeTitle(titleMetaData: $titleMetaData) {
       titleId
       title
+      relativeAmount
+      relativeUnit
       autoUpdate
       updateFreqAmount
       updateFreqType

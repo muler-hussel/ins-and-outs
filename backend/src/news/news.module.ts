@@ -8,6 +8,8 @@ import { NewsResolver } from './news.resolver';
 import { NewsEntry, NewsEntrySchema } from './schemas/newEntry.schema';
 import { PubSub } from 'graphql-subscriptions';
 import { NewsController } from './news.controller';
+import { NewsGroupService } from './newsGroup.service';
+import { SubResolver } from './newsSub.resolver';
 @Module({
   imports: [
     ScheduleModule.forRoot(),
@@ -18,8 +20,10 @@ import { NewsController } from './news.controller';
   ],
   providers: [
     NewsService,
+    NewsGroupService,
     NewsScheduler,
     NewsResolver,
+    SubResolver,
     {
       provide: 'PUB_SUB', // 令牌名称必须与注入时一致
       useValue: new PubSub(), // 直接提供实例

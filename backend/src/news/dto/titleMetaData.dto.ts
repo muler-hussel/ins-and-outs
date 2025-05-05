@@ -24,6 +24,14 @@ export class TitleMetaData {
   updateFreqType?: 'second' | 'minute' | 'hour' | 'date' | 'month';
 
   @Field()
+  @IsNumber()
+  relativeAmount: number;
+
+  @Field()
+  @IsString()
+  relativeUnit?: 'second' | 'minute' | 'hour' | 'date' | 'month' | 'year';
+
+  @Field()
   @IsString()
   lastUpdatedAt: string;
 }

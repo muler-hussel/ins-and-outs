@@ -1,31 +1,21 @@
-import { Resolver, Query, Mutation, Args, Subscription } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { NewsService } from './news.service';
-import { NewsType } from './dto/types';
-import { PubSub } from 'graphql-subscriptions';
 import { StarNewsDto } from './dto/starNews.dto';
-import { Inject, Injectable, UseGuards } from '@nestjs/common';
+import { Injectable, UseGuards } from '@nestjs/common';
 import { ClerkAuthGuard } from 'src/auth/clerkAuth.guard';
 import { CurrentUserId } from 'src/auth/currentUser.decorator';
 import { NewsMataData } from './dto/newsMetaData.dto';
 import { StarNewsMetaData } from './dto/starNewsMetaData.dto';
 import { TitleMetaData } from './dto/titleMetaData.dto';
-
-interface NewsUpdatedPayload {
-  userId: string;
-  news: NewsType;
-}
-
-interface NewsUpdatedVariables {
-  userId: string;
-}
+import { NewsGroupService } from './newsGroup.service';
 
 @UseGuards(ClerkAuthGuard)
 @Injectable()
-@Resolver(() => NewsType)
+@Resolver(() => NewsMataData)
 export class NewsResolver {
   constructor(
     private readonly newsService: NewsService,
-    @Inject('PUB_SUB') private pubSub: PubSub,
+    private readonly newsGroupService: NewsGroupService,
   ) {}
 
   @Query(() => [NewsMataData])
@@ -39,7 +29,7 @@ export class NewsResolver {
 
   @Query(() => [StarNewsMetaData])
   async getAllTitles(@CurrentUserId() userId: string) {
-    return this.newsService.findTitlesByUser(userId);
+    return this.newsGroupService.findTitlesByUser(userId);
   }
 
   @Mutation(() => Boolean)
@@ -47,7 +37,7 @@ export class NewsResolver {
     @Args('starNewsDto') starNewsDto: StarNewsDto,
     @CurrentUserId() userId: string,
   ) {
-    return this.newsService.starNews(starNewsDto, userId);
+    return this.newsGroupService.starNews(starNewsDto, userId);
   }
 
   @Mutation(() => Boolean)
@@ -55,7 +45,7 @@ export class NewsResolver {
     @Args('newsId') newsId: string,
     @CurrentUserId() userId: string,
   ) {
-    return this.newsService.unstarNews(newsId, userId);
+    return this.newsGroupService.unstarNews(newsId, userId);
   }
 
   @Query(() => [NewsMataData])
@@ -63,7 +53,10 @@ export class NewsResolver {
     @Args('titleId') titleId: string,
     @CurrentUserId() userId: string,
   ) {
-    const entries = await this.newsService.getNewsByTitleId(titleId, userId);
+    const entries = await this.newsGroupService.getNewsByTitleId(
+      titleId,
+      userId,
+    );
     return entries.map(({ generateAt, ...rest }) => ({
       generateAt: generateAt.toISOString(),
       ...rest,
@@ -75,22 +68,6 @@ export class NewsResolver {
     @Args('titleMetaData') titleMetaData: TitleMetaData,
     @CurrentUserId() userId: string,
   ) {
-    return this.newsService.changeTitle(titleMetaData, userId);
-  }
-
-  @Subscription(() => NewsType, {
-    filter: (payload: NewsUpdatedPayload, variables: NewsUpdatedVariables) =>
-      payload.userId === variables.userId,
-  })
-  onNewsUpdated(@Args('userId') userId: string) {
-    return this.pubSub.asyncIterableIterator(`newsUpdated_${userId}`);
-  }
-
-  // 后端推送
-  async notifyUpdate(news: NewsType) {
-    await this.pubSub.publish(`newsUpdated_${news.userId}`, {
-      userId: news.userId,
-      news,
-    });
+    return this.newsGroupService.changeTitle(titleMetaData, userId);
   }
 }

@@ -16,6 +16,8 @@ export interface StarNewsFormData {
   autoUpdate: boolean;
   updateFreqAmount?: number;
   updateFreqType?: string;
+  relativeAmount: number;
+  relativeUnit?: string;
 }
 
 export const StarNewsModal = ({
@@ -30,6 +32,8 @@ export const StarNewsModal = ({
   const [autoUpdate, setAutoUpdate] = useState(initialData?.autoUpdate || false);
   const [freqAmount, setFreqAmount] = useState(initialData?.updateFreqAmount || 1);
   const [freqType, setFreqType] = useState(initialData?.updateFreqType || 'date');
+  const [relativeAmount, setRelativeAmount] = useState(initialData?.relativeAmount || 0);
+  const [relativeUnit, setRelativeUnit] = useState(initialData?.relativeUnit || "");
 
   useEffect(() => {
     if (initialData) {
@@ -37,6 +41,8 @@ export const StarNewsModal = ({
       setAutoUpdate(initialData.autoUpdate);
       setFreqAmount(initialData.updateFreqAmount ?? 1);
       setFreqType(initialData.updateFreqType ?? 'date');
+      setRelativeAmount(initialData.relativeAmount ?? 0);
+      setRelativeUnit(initialData.relativeUnit ?? 'date');
     }
   }, [initialData]);
 
@@ -52,7 +58,14 @@ export const StarNewsModal = ({
             key="submit" 
             type="primary" 
             onClick={() => 
-            onConfirm({title: title, autoUpdate: autoUpdate, updateFreqAmount: freqAmount, updateFreqType: freqType})}
+            onConfirm({
+              title: title, 
+              autoUpdate: autoUpdate, 
+              updateFreqAmount: freqAmount, 
+              updateFreqType: freqType, 
+              relativeAmount: relativeAmount, 
+              relativeUnit: relativeUnit
+            })}
           >
             确认
           </Button>,
@@ -71,30 +84,54 @@ export const StarNewsModal = ({
       <div className="flex items-center gap-4 mb-4 text-gray-600">
         <span className="text-sm">自动更新</span>
         <Switch checked={autoUpdate} onChange={setAutoUpdate} size='small' />
-        {autoUpdate && (
-        <div className="flex gap-2 text-gray-600 w-2/3">
-          <Input
-            type="number"
-            className="w-1/3"
-            value={freqAmount}
-            onChange={(e) => setFreqAmount(Number(e.target.value))}
-          />
-          <Select
-            value={freqType}
-            options={[
-              { value: 'second', label: '秒' },
-              { value: 'minute', label: '分' },
-              { value: 'hour', label: '小时' },
-              { value: 'date', label: '日' },
-              { value: 'month', label: '月' },
-            ]}
-            onChange={(e) => setFreqType(e)}
-            className="w-2/3"
-          />
+      </div>
+      {autoUpdate && (
+        <div className='text-gray-600 ml-2'>
+          <div className="flex gap-2 items-center">
+            <div>更新频率</div>
+            <Input
+              type="number"
+              value={freqAmount}
+              onChange={(e) => setFreqAmount(Number(e.target.value))}
+              className='w-1/4'
+            />
+            <Select
+              value={freqType}
+              options={[
+                { value: 'second', label: '秒' },
+                { value: 'minute', label: '分' },
+                { value: 'hour', label: '小时' },
+                { value: 'date', label: '日' },
+                { value: 'month', label: '月' },
+              ]}
+              onChange={(e) => setFreqType(e)}
+              className="w-1/2"
+            />
+          </div>
+          <div className="flex gap-2 items-center">
+            <div>时间范围</div>
+            <Input 
+              className="w-1/4"
+              type="number" 
+              value={relativeAmount} 
+              onChange={(e) => setRelativeAmount(Number(e.target.value))} 
+            />
+            <Select
+              value={relativeUnit}
+              options={[
+                { value: 'second', label: '秒' },
+                { value: 'minute', label: '分' },
+                { value: 'hour', label: '小时' },
+                { value: 'date', label: '日' },
+                { value: 'month', label: '月' },
+                { value: 'year', label: '年' },
+              ]}
+              onChange={(e) => setRelativeUnit(e)}
+              className="w-1/2"
+            />
+          </div>
         </div>
       )}
-      </div>
-
       
     </Modal>
   );

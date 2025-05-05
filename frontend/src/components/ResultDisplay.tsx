@@ -3,21 +3,23 @@ import { FormOutlined, RedoOutlined, StarOutlined, StarFilled } from '@ant-desig
 import { StarNewsFormData, useModal } from "@/hooks/use-modal";
 import { useNewsStore } from '../store/newsStore';
 import { ScrollArea } from "./ui/scroll-area";
-import { SignedIn, useUser } from '@clerk/clerk-react';
+import { SignedIn, useAuth, useUser } from '@clerk/clerk-react';
 import axios from 'axios';
 import { useControlPanel } from '@/provider/ControlPanelProvider';
 import { Dayjs } from 'dayjs';
-import { useMutation } from '@apollo/client';
+import { useMutation, useSubscription } from '@apollo/client';
 import { STAR_NEWS } from '@/graphql/mutation/StarNews';
 import { UN_STAR_NEWS } from '@/graphql/mutation/UnStarNews';
 import { useLoadTitlesIfSignedIn } from '@/hooks/use-loadTitlesIfSignedIn';
 import { useLoadNewsOfTitle } from '@/hooks/use-loadNewsOfTitle';
 import { useParams } from 'react-router';
 import { useLoadNewsIfSignedIn } from '@/hooks/use-loadNewsIfSignedIn';
+import { ON_NEWS_UPDATED } from '@/graphql/subscription/OnNewsUpdated';
+import { useStarredStore } from '@/store/starredStore';
 
 export default function ResultDisplay({ onControlPanelToggle }: { onControlPanelToggle: () => void }) {
   const { titleId } = useParams<{ titleId: string }>();
-  const { updateStarredState, entries } = useNewsStore();
+  const { updateStarredState, entries, addEntry } = useNewsStore();
   const { isSignedIn } = useUser();
   const { openPanel } = useControlPanel();
   const [starNews] = useMutation(STAR_NEWS);
@@ -26,6 +28,8 @@ export default function ResultDisplay({ onControlPanelToggle }: { onControlPanel
   const { loadNewsOfTitles } = useLoadNewsOfTitle();
   const { loadNews } = useLoadNewsIfSignedIn();
   const { loading } = titleId ? loadNewsOfTitles() : loadNews();
+  const { markTitleAsUpdated } = useStarredStore.getState();
+  const { userId } = useAuth();
 
   const handleRegenerate = async (newsId?: string, generateAt?: string) => {
     if (isSignedIn && newsId) {
@@ -59,7 +63,7 @@ export default function ResultDisplay({ onControlPanelToggle }: { onControlPanel
       const res = await axios.get(`/api/news/${newsId}/params`);
       useModal.getState().openModal({
         mode: 'new',
-        initialData: { title: res.data.keyword, autoUpdate: false },
+        initialData: { title: res.data.keyword, autoUpdate: false, relativeAmount: 0, relativeUnit: undefined },
         onConfirm: async (formData: StarNewsFormData) => {
           try {
             await starNews({
@@ -97,6 +101,19 @@ export default function ResultDisplay({ onControlPanelToggle }: { onControlPanel
       alert(err);
     }
   }
+
+  const { data } = useSubscription(ON_NEWS_UPDATED, {
+    variables: {userId: userId},
+    onSubscriptionData: ({ subscriptionData }) => {
+      const { news, titleId } = subscriptionData.data.onNewsUpdated;
+
+      if (!titleId || titleId === titleId) {
+        addEntry(news);
+      } else {
+        markTitleAsUpdated(news.titleId);
+      }
+    }
+  });
 
   return (
     <ScrollArea className="m-2 h-[calc(100vh-16px)] bg-gray-50 justify-end rounded-xl">
